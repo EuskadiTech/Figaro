@@ -89,14 +89,6 @@ for mod in load_from_dir():
     app.register_blueprint(mod)
 
 if __name__ == "__main__":
-    if utils.os.environ.get("GAL_DOCKERTUNNEL_MYURL") != None:
-        tunnel = utils.DirectTunnel(
-            utils.os.environ.get("GAL_DOCKERTUNNEL_MYURL"),
-            utils.os.environ.get("GAL_DOCKERTUNNEL_ORCHURL", "https://grp.naiel.fyi"),
-        )
-    else:
-        tunnel = utils.PinggyTunnel()
-    TIP = tunnel.start()
     print(
         f"""
 ------------------------------------
@@ -104,24 +96,18 @@ Servidor arrancado
 
 Puedes acceder a Galileo desde:
 - http://127.0.0.1:8129/ (local)
-- {TIP} (no caduca)
-
+- http://(tu ip local):8129/
 
 No cierres esta ventana.
 ------------------------------------
 """
     )
     if getattr(utils.sys, "frozen", False):
-        HOST = "127.0.0.1"
+        HOST = "0.0.0.0"
     else:
         HOST = "0.0.0.0"
 
     config = utils.get_config()
 
-    BASE = "/rd/" + config["Clave Proxy"]
-    app.wsgi_app = DispatcherMiddleware(
-        app.wsgi_app,
-        {BASE: app.wsgi_app},
-    )
     app.run(HOST, 8129, False)
     tunnel.stop()
