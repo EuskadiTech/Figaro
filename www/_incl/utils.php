@@ -2,6 +2,10 @@
 session_start();
 
 $RUTA_DATOS = __DIR__ . "/../../data";
+if (file_exists("/DATA")) {
+    $RUTA_DATOS = "/DATA";
+}
+
 if (!file_exists($RUTA_DATOS)) {
     mkdir($RUTA_DATOS, 0755, true);
 }
