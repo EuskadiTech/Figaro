@@ -5,8 +5,10 @@ if (isset($SKIP_AUTH) && $SKIP_AUTH === true) {
     header("Location: /login.php");
     exit();
 } else if (isset($SKIP_CENTRO) && $SKIP_CENTRO === true) {
+  if (!isset($_SESSION["centro"]) || !isset($_SESSION["aula"])) {
     header("Location: /elegir_centro.php");
     exit();
+  }
 }
 ?>
 <!doctype html>
