@@ -4,7 +4,7 @@ if (isset($SKIP_AUTH) && $SKIP_AUTH === true) {
 } else if (!is_logged_in()) {
     header("Location: /login.php");
     exit();
-} else if (!is_centro_aula_selected() && realpath($_SERVER["SCRIPT_FILENAME"]) != realpath(__DIR__ . "/../elegir_centro.php")) {
+} else if (isset($SKIP_CENTRO) && $SKIP_CENTRO === true) {
     header("Location: /elegir_centro.php");
     exit();
 }

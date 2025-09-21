@@ -1,6 +1,7 @@
 <?php
 require_once "_incl/utils.php";
 $SKIP_AUTH = false; // Make sure user is logged in to access this page
+$SKIP_CENTRO = true; // Skip centro/aula check for this page
 
 // Should we require permission to select centro/aula?
 // No! because if user does not have a preassigned centro/aula, they need to be able to select one.
