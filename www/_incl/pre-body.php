@@ -64,24 +64,24 @@
   </center>
   <details>
     <summary class="button">
-      <img src="/pictos/mapa.png" height="70">
+      <img src="/static/pictos/mapa.png" height="70">
       <br>Navegación
     </summary>
     <div style="background: lightcyan; border: 2px solid black; border-radius: 7px; padding: 5px;">
       <a class="button">
-        <img src="/pictos/aula.png" height="70">
+        <img src="/static/pictos/aula.png" height="70">
         <br>Elegir Aula
       </a>
       <a class="button">
-        <img src="/pictos/material_escolar.png" height="70">
+        <img src="/static/pictos/material_escolar.png" height="70">
         <br>Materiales
       </a>
       <a class="button">
-        <img src="/pictos/actividades.png" height="70">
+        <img src="/static/pictos/actividades.png" height="70">
         <br>Actividades
       </a>
       <a class="button">
-        <img src="/pictos/archivos.png" height="70">
+        <img src="/static/pictos/archivos.png" height="70">
         <br>Archivos
       </a>
     </div>
