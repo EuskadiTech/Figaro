@@ -12,6 +12,7 @@ body {
 main {
   /*max-width: 45rem;
             margin: 0 auto;*/
+  padding-top: 15px;
   margin: 0;
   margin-bottom: 20px;
 }
@@ -423,5 +424,76 @@ details:not([open]) .ribbon-panel {
 
 fieldset legend {
   font-size: 20px;
+  font-weight: bold;
+}
+
+/* Login Page Styles */
+#login-container {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+#login-method-selector {
+    margin-bottom: 20px;
+}
+
+#login-method-selector button.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+#qr-scanner-container {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#loader {
+  z-index: 2048;
+  border: 25px solid red;
+  background-color: #fff;
+  color: black;
+  margin: 0;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 250px;
+  height: 250px;
+}
+
+figure {
+  margin: 0;
+  padding: 3px;
+  text-align: center;
+  display: inline-block;
+  border: 1px solid black;
+  border-radius: 5px;
+}
+figure figcaption {
   font-weight: bold;
 }

@@ -1,3 +1,14 @@
+<?php require_once "utils.php";
+if (isset($SKIP_AUTH) && $SKIP_AUTH === true) {
+    // Skip auth because this is a log-in page
+} else if (!is_logged_in()) {
+    header("Location: /login.php");
+    exit();
+} else if (!is_centro_aula_selected() && realpath($_SERVER["SCRIPT_FILENAME"]) != realpath(__DIR__ . "/../elegir_centro.php")) {
+    header("Location: /elegir_centro.php");
+    exit();
+}
+?>
 <!doctype html>
 <html lang="es">
 
@@ -58,32 +69,47 @@
   
   
   <center id="loader">
-    <img src="/static/load.gif" width="200" height="200" />
+    <img loading="eager" src="/static/load.gif" width="200" height="200" />
     <h4 style="margin: 0;" id="loaderStat">Descargando...</h4>
     <progress style="width: calc(100% - 25px);"></progress>
   </center>
-  <details>
-    <summary class="button">
-      <img src="/static/pictos/mapa.png" height="70">
-      <br>Navegación
-    </summary>
+  <?php if (is_logged_in()) {
+    $user = get_user_info();
+  ?>
+   <span style="font-family: monospace;"><?php echo $_SESSION["centro"]; ?> -> <?php echo $_SESSION["aula"]; ?></span>
     <div style="background: lightcyan; border: 2px solid black; border-radius: 7px; padding: 5px;">
-      <a class="button">
-        <img src="/static/pictos/aula.png" height="70">
-        <br>Elegir Aula
+      <a class="button" href="/elegir_centro.php">
+        <figure style="background-color: white; color: black;"><img loading="lazy" src="/static/pictos/centro.png" height="70"><figcaption></figcaption></figure><br>
+        Elegir Centro
       </a>
-      <a class="button">
-        <img src="/static/pictos/material_escolar.png" height="70">
-        <br>Materiales
-      </a>
-      <a class="button">
-        <img src="/static/pictos/actividades.png" height="70">
-        <br>Actividades
-      </a>
-      <a class="button">
-        <img src="/static/pictos/archivos.png" height="70">
-        <br>Archivos
+      <?php if (user_has_access("materiales.index")) { ?>
+        <a class="button" href="/materiales/index.php">
+          <figure style="background-color: white; color: black;"><img loading="lazy" src="/static/pictos/material_escolar.png" height="70"><figcaption></figcaption></figure><br>
+          Materiales
+        </a>
+      <?php } ?>
+      <?php if (user_has_access("actividades.index")) { ?>
+        <a class="button" href="/notimpl.php">
+          <figure style="background-color: white; color: black;"><img loading="lazy" src="/static/pictos/actividades.png" height="70"><figcaption></figcaption></figure><br>
+          Actividades
+        </a>
+      <?php } ?>
+      <?php if (user_has_access("archivos.index")) { ?>
+        <a class="button" href="/notimpl.php">
+          <figure style="background-color: white; color: black;"><img loading="lazy" src="/static/pictos/archivos.png" height="70"><figcaption></figcaption></figure><br>
+          Archivos
+        </a>
+      <?php } ?>
+      <?php if (user_has_access("ADMIN")) { ?>
+        <a class="button" href="/admin/index.php">
+          <figure style="background-color: white; color: black;"><img loading="lazy" src="/static/pictos/datacenter.png" height="70"><figcaption></figcaption></figure><br>
+          Administración
+        </a>
+      <?php } ?>
+      <a class="button" href="/logout.php">
+        <figure style="background-color: white; color: black;"><img loading="lazy" src="/static/pictos/candado.png" height="70"><figcaption></figcaption></figure><br>
+        Cerrar Sesión
       </a>
     </div>
-  </details>
+  <?php } ?>
   <main id="container">
