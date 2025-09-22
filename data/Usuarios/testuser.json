@@ -1,0 +1,9 @@
+{
+    "password": "$2y$10$GseSZ5wxXnfyKYGCMIkss.CZEuDN9ix6oWdCElbgSSWXnZMNYh5Bq",
+    "auth": [
+        "materiales.index"
+    ],
+    "display_name": "Test User",
+    "email": "test@example.com",
+    "created_at": "2025-09-22T09:48:25+00:00"
+}
