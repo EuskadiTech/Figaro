@@ -183,7 +183,7 @@ details summary {
   font-size: 20px;
 }
 
-thead tr {
+thead tr, thead tr th {
   background-color: black;
   color: white;
 }
