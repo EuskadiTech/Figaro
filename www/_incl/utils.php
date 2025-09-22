@@ -10,19 +10,77 @@ if (!file_exists($RUTA_DATOS)) {
     mkdir($RUTA_DATOS, 0755, true);
 }
 
-$users = [
-    'demo' => [
-        'password' => password_hash('demo', PASSWORD_DEFAULT),
-        'auth' => ['ADMIN', 'module2'],
-        "display_name" => "Demo User",
-        'email' => 'demo@example.com',
-    ],
-    // Otros usuarios pueden ser añadidos aquí
-];
+// User management functions using JSON files
+function get_users_dir() {
+    global $RUTA_DATOS;
+    $users_dir = "$RUTA_DATOS/Usuarios";
+    if (!file_exists($users_dir)) {
+        mkdir($users_dir, 0755, true);
+    }
+    return $users_dir;
+}
+
+function load_user($username) {
+    $users_dir = get_users_dir();
+    $user_file = "$users_dir/$username.json";
+    if (file_exists($user_file)) {
+        return json_decode(file_get_contents($user_file), true);
+    }
+    return null;
+}
+
+function save_user($username, $user_data) {
+    $users_dir = get_users_dir();
+    $user_file = "$users_dir/$username.json";
+    return file_put_contents($user_file, json_encode($user_data, JSON_PRETTY_PRINT)) !== false;
+}
+
+function get_all_users() {
+    $users_dir = get_users_dir();
+    $users = [];
+    if (is_dir($users_dir)) {
+        $files = glob("$users_dir/*.json");
+        foreach ($files as $file) {
+            $username = basename($file, '.json');
+            $user_data = json_decode(file_get_contents($file), true);
+            if ($user_data) {
+                $users[$username] = $user_data;
+            }
+        }
+    }
+    return $users;
+}
+
+function delete_user($username) {
+    $users_dir = get_users_dir();
+    $user_file = "$users_dir/$username.json";
+    if (file_exists($user_file)) {
+        return unlink($user_file);
+    }
+    return false;
+}
+
+// Initialize demo user if no users exist
+function ensure_demo_user() {
+    $users = get_all_users();
+    if (empty($users)) {
+        $demo_user = [
+            'password' => password_hash('demo', PASSWORD_DEFAULT),
+            'auth' => ['ADMIN', 'module2'],
+            'display_name' => 'Demo User',
+            'email' => 'demo@example.com',
+            'created_at' => date('c')
+        ];
+        save_user('demo', $demo_user);
+    }
+}
+
+// Ensure demo user exists on every request
+ensure_demo_user();
 function login($username, $password)
 {
-    global $users;
-    if (isset($users[$username]) && password_verify($password, $users[$username]['password'])) {
+    $user = load_user($username);
+    if ($user && password_verify($password, $user['password'])) {
         setcookie("username", $username, time() + 3600, "/");
         setcookie("password", base64_encode($password), time() + 3600, "/");
         setcookie("loggedin", "yes", time() + 3600, "/");
@@ -37,31 +95,32 @@ function logout()
 }
 function is_logged_in()
 {
-    global $users;
     // Undefined index fix
     if (!isset($_COOKIE["loggedin"]) || !isset($_COOKIE["username"]) || !isset($_COOKIE["password"])) {
         return false;
     }
-    return $_COOKIE["loggedin"] == "yes" && password_verify(base64_decode($_COOKIE["password"]), $users[$_COOKIE["username"]]['password']);
+    $user = load_user($_COOKIE["username"]);
+    return $_COOKIE["loggedin"] == "yes" && $user && password_verify(base64_decode($_COOKIE["password"]), $user['password']);
 }
 function get_user_info()
 {
-    global $users;
     if (is_logged_in()) {
-        return $users[$_COOKIE["username"]];
+        return load_user($_COOKIE["username"]);
     }
     return null;
 }
 function user_has_access($module)
 {
-    global $users;
     if (is_logged_in()) {
+        $user = load_user($_COOKIE["username"]);
+        if (!$user) return false;
+        
         // if user has access to ADMIN, allow all modules
-        if (in_array('ADMIN', $users[$_COOKIE["username"]]['auth'])) {
+        if (in_array('ADMIN', $user['auth'])) {
             return true;
         }
         // else check if user has access to the requested module
-        return in_array($module, $users[$_COOKIE["username"]]['auth']);
+        return in_array($module, $user['auth']);
     }
     return false;
 }
@@ -98,7 +157,6 @@ function is_centro_aula_selected()
 
 function login_with_qr($qr_data)
 {
-    global $users;
     $parts = explode(':', $qr_data);
     if (count($parts) !== 3) {
         return false;
@@ -108,7 +166,8 @@ function login_with_qr($qr_data)
     $password = base64_decode($parts[1]);
     $hash = $parts[2];
 
-    if (!isset($users[$username])) {
+    $user = load_user($username);
+    if (!$user) {
         return false;
     }
 

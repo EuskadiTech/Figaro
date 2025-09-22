@@ -1,0 +1,10 @@
+{
+    "password": "$2y$10$wonKfVlZndi4K22lDV5Ce.QtWGIvmnOPxrJ1jOmWPUCUgGBw1Waku",
+    "auth": [
+        "ADMIN",
+        "module2"
+    ],
+    "display_name": "Demo User",
+    "email": "demo@example.com",
+    "created_at": "2025-09-22T09:46:16+00:00"
+}

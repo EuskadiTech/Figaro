@@ -1,4 +1,5 @@
 <?php
+$SKIP_CENTRO = true; // Admin doesn't need centro/aula selection
 require_once "../_incl/utils.php";
 require_once "../_incl/pre-body.php";
 ?>

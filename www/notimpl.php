@@ -11,7 +11,6 @@ require_once "_incl/pre-body.php"; ?>
   <li>Calendario</li>
   <li>Email</li>
   <li>Gestión de Archivos</li>
-  <li>Gestión de Usuarios (próximamente)</li>
   <li>Otras funcionalidades administrativas (próximamente)</li>
 </ul>
 <?php require_once "_incl/post-body.php"; ?>
