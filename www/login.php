@@ -37,20 +37,20 @@ require_once "_incl/pre-body.php";
     <?php endif; ?>
 
     <div id="login-method-selector">
-        <button id="btn-user-pass" class="active"><figure style="background-color: white; color: black;"><img src="/static/pictos/contraseña-recordar.png" height="70"><figcaption></figcaption></figure><br> Usuario/Contraseña</button>
-        <button id="btn-qr"><figure style="background-color: white; color: black;"><img src="/static/pictos/QR.png" height="70"><figcaption></figcaption></figure><br> Codigo QR</button>
+        <button id="btn-user-pass" class="active"><img loading="lazy" class="picto" src="/static/pictos/contraseña-recordar.png"><br> Usuario/Contraseña</button>
+        <button id="btn-qr"><img loading="lazy" class="picto" src="/static/pictos/QR.png"><br> Codigo QR</button>
     </div>
 
     <form id="login-form-user-pass" method="POST" action="login.php">
         <div class="form-group">
-            <label for="username"><figure style="background-color: white; color: black;"><img src="/static/pictos/nombre.png" height="70"><figcaption>Usuario</figcaption></figure></label>
+            <label for="username"><img loading="lazy" class="picto" src="/static/pictos/nombre.png"></label>
             <input type="text" id="username" name="username" autofocus required placeholder="Usuario">
         </div>
         <div class="form-group">
-            <label for="password"><figure style="background-color: white; color: black;"><img src="/static/pictos/contraseña.png" height="70"><figcaption>Contraseña</figcaption></figure></label>
+            <label for="password"><img loading="lazy" class="picto" src="/static/pictos/contraseña.png"></label>
             <input type="password" id="password" name="password" required placeholder="Contraseña">
         </div>
-        <button type="submit" name="login_user_pass"><figure style="background-color: white; color: black;"><img src="/static/pictos/abrir-cerradura.png" height="70"><figcaption></figcaption></figure><br> Entrar</button>
+        <button type="submit" name="login_user_pass"><img loading="lazy" class="picto" src="/static/pictos/abrir-cerradura.png"><br> Entrar</button>
     </form>
 
     <div id="login-form-qr" style="display: none;">

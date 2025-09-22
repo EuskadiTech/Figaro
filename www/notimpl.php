@@ -7,7 +7,6 @@ require_once "_incl/pre-body.php"; ?>
 <h3>Dado a que Figaró sigue en desarrollo, algunas funcionalidades pueden no estar disponibles.</h3>
 <b>Lista de funcionalidades no implementadas:</b>
 <ul>
-  <li>Gestión de Actividades</li>
   <li>Calendario</li>
   <li>Email</li>
   <li>Gestión de Archivos</li>

@@ -486,14 +486,15 @@ fieldset legend {
   height: 250px;
 }
 
-figure {
+.picto {
   margin: 0;
   padding: 3px;
   text-align: center;
   display: inline-block;
   border: 1px solid black;
   border-radius: 5px;
-}
-figure figcaption {
-  font-weight: bold;
+  background-color: white;
+  color: black;
+  height: 70px;
+  width: 70px;
 }

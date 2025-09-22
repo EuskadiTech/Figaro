@@ -1,6 +1,9 @@
 <?php
 session_start();
 
+// hide warnings and lower error reporting
+error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
+
 $RUTA_DATOS = __DIR__ . "/../../data";
 if (file_exists("/DATA")) {
     $RUTA_DATOS = "/DATA";
@@ -189,4 +192,14 @@ function get_centros() {
         return $item !== '.' && $item !== '..' && is_dir("$centros_path/$item");
     });
     return $centros;
+}
+
+function iso_to_es($iso_date) {
+    $date = explode('T', $iso_date)[0];
+    $parts = explode('-', $date);
+    if (count($parts) !== 3) {
+        return $iso_date; // return original if format is unexpected
+    }
+    // Invert array (YYYY-MM-DD to DD-MM-YYYY)
+    return implode('/', array_reverse($parts));
 }

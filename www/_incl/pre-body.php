@@ -78,38 +78,40 @@ if (isset($SKIP_AUTH) && $SKIP_AUTH === true) {
   <?php if (is_logged_in()) {
     $user = get_user_info();
   ?>
+   <?php if (isset($_SESSION["centro"]) && isset($_SESSION["aula"])) { ?>
    <span style="font-family: monospace;"><?php echo $_SESSION["centro"]; ?> -> <?php echo $_SESSION["aula"]; ?></span>
+   <?php } ?>
     <div style="background: lightcyan; border: 2px solid black; border-radius: 7px; padding: 5px;">
       <a class="button" href="/elegir_centro.php">
-        <figure style="background-color: white; color: black;"><img loading="lazy" src="/static/pictos/centro.png" height="70"><figcaption></figcaption></figure><br>
+        <img loading="lazy" class="picto" src="/static/pictos/centro.png"><br>
         Elegir Centro
       </a>
       <?php if (user_has_access("materiales.index")) { ?>
         <a class="button" href="/materiales/index.php">
-          <figure style="background-color: white; color: black;"><img loading="lazy" src="/static/pictos/material_escolar.png" height="70"><figcaption></figcaption></figure><br>
+          <img loading="lazy" class="picto" src="/static/pictos/material_escolar.png"><br>
           Materiales
         </a>
       <?php } ?>
       <?php if (user_has_access("actividades.index")) { ?>
-        <a class="button" href="/notimpl.php">
-          <figure style="background-color: white; color: black;"><img loading="lazy" src="/static/pictos/actividades.png" height="70"><figcaption></figcaption></figure><br>
+        <a class="button" href="/actividades/index.php">
+          <img loading="lazy" class="picto" src="/static/pictos/actividades.png"><br>
           Actividades
         </a>
       <?php } ?>
       <?php if (user_has_access("archivos.index")) { ?>
         <a class="button" href="/notimpl.php">
-          <figure style="background-color: white; color: black;"><img loading="lazy" src="/static/pictos/archivos.png" height="70"><figcaption></figcaption></figure><br>
+          <img loading="lazy" class="picto" src="/static/pictos/archivos.png"><br>
           Archivos
         </a>
       <?php } ?>
       <?php if (user_has_access("ADMIN")) { ?>
         <a class="button" href="/admin/index.php">
-          <figure style="background-color: white; color: black;"><img loading="lazy" src="/static/pictos/datacenter.png" height="70"><figcaption></figcaption></figure><br>
+          <img loading="lazy" class="picto" src="/static/pictos/datacenter.png"><br>
           Administración
         </a>
       <?php } ?>
       <a class="button" href="/logout.php">
-        <figure style="background-color: white; color: black;"><img loading="lazy" src="/static/pictos/candado.png" height="70"><figcaption></figcaption></figure><br>
+        <img loading="lazy" class="picto" src="/static/pictos/candado.png"><br>
         Cerrar Sesión
       </a>
     </div>

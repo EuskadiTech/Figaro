@@ -21,7 +21,7 @@ if (file_exists($materiales_path)) {
 
 <h1>Inventario de Materiales</h1>
 
-<a href="crear_material.php" class="button">Crear Material</a>
+<a href="crear_material.php" class="button"><img loading="lazy" class="picto" src="/static/pictos/añadir.png"><br>Añadir Material</a>
 
 <div class="materiales-list">
     <?php if (empty($materiales)): ?>
@@ -45,8 +45,8 @@ if (file_exists($materiales_path)) {
                         <td><?php echo htmlspecialchars($material['cantidad_disponible']); ?> <?php echo htmlspecialchars($material['unidad']); ?>s</td>
                         <td><?php echo htmlspecialchars($material['cantidad_minima']); ?></td>
                         <td>
-                            <a class="button" href="editar_material.php?id=<?php echo urlencode($material['id']); ?>">Editar</a>
-                            <a class="button rojo" href="eliminar_material.php?id=<?php echo urlencode($material['id']); ?>">Eliminar</a>
+                            <a class="button" href="editar_material.php?id=<?php echo urlencode($material['id']); ?>"><img loading="lazy" class="picto" src="/static/pictos/escribir.png"><br>Editar</a>
+                            <a class="button rojo" href="eliminar_material.php?id=<?php echo urlencode($material['id']); ?>"><img loading="lazy" class="picto" src="/static/pictos/borrar.png"><br>Eliminar</a>
                         </td>
                     </tr>
                 <?php endforeach; ?>

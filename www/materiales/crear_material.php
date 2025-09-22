@@ -60,7 +60,7 @@ if (!file_exists($materiales_path)) {
 
 ?>
 
-<h1>Crear Material</h1>
+<h1>Añadir Material</h1>
 
 <?php if (isset($error)): ?>
     <p style="color: red;"><?php echo $error; ?></p>
