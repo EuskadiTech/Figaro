@@ -1,6 +1,5 @@
 <?php
-require_once "../_incl/pre-body.php";
-
+require_once "../_incl/utils.php";
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle form submission
     $id = uniqid();
@@ -30,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header("Location: index.php");
     exit();
 }
+require_once "../_incl/pre-body.php";
 ?>
 
 <h2>Crear nueva actividad</h2>
