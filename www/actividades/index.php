@@ -42,15 +42,6 @@ $upcoming_activities = array_filter($all_activities, function ($activity) use ($
 usort($upcoming_activities, function ($a, $b) {
     return strtotime($a['start']) - strtotime($b['start']);
 });
-
-$date_formatter = new IntlDateFormatter(
-    'es_ES',
-    IntlDateFormatter::FULL,
-    IntlDateFormatter::SHORT,
-    null,
-    null,
-    'eeee, d \'de\' MMMM \'de\' yyyy HH:mm'
-);
 ?>
 
 <h2>Próximas Actividades</h2>
