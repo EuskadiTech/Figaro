@@ -16,9 +16,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $is_global = isset($_POST['global']) && $_POST['global'] == '1';
     $centro = $_SESSION['centro'];
     $aula = $_SESSION['aula'];
-    $dir = "../../data/Actividades/$centro/$aula";
+    $dir = "$RUTA_DATOS/Actividades/$centro/$aula";
     if ($is_global) {
-        $dir = "../../data/Actividades/_Global";
+        $dir = "$RUTA_DATOS/Actividades/_Global";
     }
     if (!is_dir($dir)) {
         mkdir($dir, 0777, true);
