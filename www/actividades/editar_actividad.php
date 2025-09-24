@@ -4,10 +4,10 @@ require_once "../_incl/pre-body.php";
 $id = $_GET['id'];
 $centro = $_SESSION['centro'];
 $aula = $_SESSION['aula'];
-$file_path = "../../data/Actividades/$centro/$aula/$id.json";
+$file_path = "$RUTA_DATOS/Actividades/$centro/$aula/$id.json";
 
 if ($_GET['global'] == '1') {
-    $file_path = "../../data/Actividades/_Global/$id.json";
+    $file_path = "$RUTA_DATOS/Actividades/_Global/$id.json";
 }
 if (!file_exists($file_path)) {
     die("Actividad no encontrada.");
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // If the 'global' status changes, move the file
     if ($new_centro !== $centro) {
-        $new_dir = "../../data/Actividades/$new_centro/$aula";
+        $new_dir = "$RUTA_DATOS/Actividades/$new_centro/$aula";
         if (!is_dir($new_dir)) {
             mkdir($new_dir, 0777, true);
         }
