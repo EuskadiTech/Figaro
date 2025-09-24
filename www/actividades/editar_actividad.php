@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data['meet'] = $_POST['meet'];
 
     $is_global = isset($_POST['global']) && $_POST['global'] == '1';
+    if ($is_global) {$data["is_shared_from"] = $_SESSION['centro'];}
     $new_centro = $is_global ? '_Global' : $_SESSION['centro'];
 
     // If the 'global' status changes, move the file

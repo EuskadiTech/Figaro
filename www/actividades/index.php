@@ -260,6 +260,13 @@ document.addEventListener('DOMContentLoaded', function() {
             <h3>
                 <?php echo htmlspecialchars($activity['title']); ?>
             </h3>
+            <?php if (isset($activity["is_shared_from"]) and $activity["is_shared_from"] != "") {?>
+                <p><img loading="lazy" class="picto" src="/static/pictos/compartir2.png">
+                    <span style="font-weight: bold; vertical-align: top; display: inline-block;"> Compartido por: <br>
+                        <span style="font-size: x-large;"><?php echo htmlspecialchars(iso_to_es($activity['is_shared_from'])); ?>
+                        </span> </span>
+                </p>
+            <?php } ?>
             <p><img loading="lazy" class="picto" src="/static/pictos/dia.png">
                 <span style="font-weight: bold; vertical-align: top; display: inline-block;"> Dia: <br>
                     <span style="font-size: xx-large;"><?php echo htmlspecialchars(iso_to_es($activity['start'])); ?>

@@ -19,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $dir = "$RUTA_DATOS/Actividades/$centro/$aula";
     if ($is_global) {
         $dir = "$RUTA_DATOS/Actividades/_Global";
+        $data["is_shared_from"] = $centro;
     }
     if (!is_dir($dir)) {
         mkdir($dir, 0777, true);
