@@ -25,12 +25,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data['meet'] = $_POST['meet'];
 
     $is_global = isset($_POST['global']) && $_POST['global'] == '1';
-    if ($is_global) {$data["is_shared_from"] = $_SESSION['centro'];}
     $new_centro = $is_global ? '_Global' : $_SESSION['centro'];
-
+    $new_dir = "$RUTA_DATOS/Actividades/$new_centro/$aula";
+    
+    if ($is_global) {$data["is_shared_from"] = $_SESSION['centro']; $new_dir = "$RUTA_DATOS/Actividades/_Global";}
     // If the 'global' status changes, move the file
     if ($new_centro !== $centro) {
-        $new_dir = "$RUTA_DATOS/Actividades/$new_centro/$aula";
         if (!is_dir($new_dir)) {
             mkdir($new_dir, 0777, true);
         }
