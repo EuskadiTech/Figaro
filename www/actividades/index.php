@@ -25,8 +25,8 @@ function get_activities_from_dir($dir, $is_global = false)
     return $activities;
 }
 
-$local_activities = get_activities_from_dir("../../data/Actividades/$centro/$aula");
-$global_activities = get_activities_from_dir("../../data/Actividades/_Global", true);
+$local_activities = get_activities_from_dir("$RUTA_DATOS/Actividades/$centro/$aula");
+$global_activities = get_activities_from_dir("$RUTA_DATOS/Actividades/_Global", true);
 $all_activities = array_merge($local_activities, $global_activities);
 
 // Filter for upcoming activities
