@@ -247,7 +247,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <div id="upcoming-activities-section">
 <h2>Próximas Actividades</h2>
 
-<a href="crear_actividad.php" class="btn btn-success" style="margin-bottom: 20px;">Crear nueva actividad</a>
+<a href="crear_actividad.php" class="button" style="margin-bottom: 20px;">
+    <img loading="lazy" class="picto" src="/static/pictos/mas.png"><br>
+    Crear nueva actividad</a>
 <br>
 
 <div id="upcoming-activities-container">
