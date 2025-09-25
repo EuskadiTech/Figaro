@@ -112,7 +112,7 @@ if ($show_past) {
 <?php endif; ?>
 
 <a href="crear_actividad.php" class="button" style="margin-bottom: 20px;">
-    <img loading="lazy" class="picto" src="/static/pictos/mas.png"><br>
+    <img loading="lazy" class="picto" src="/static/pictos/nuevo.png"><br>
     Crear nueva actividad</a>
 <br>
 

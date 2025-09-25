@@ -21,7 +21,7 @@ if (file_exists($materiales_path)) {
 
 <h1>Inventario de Materiales</h1>
 
-<a href="crear_material.php" class="button"><img loading="lazy" class="picto" src="/static/pictos/mas.png"><br>Añadir Material</a>
+<a href="crear_material.php" class="button"><img loading="lazy" class="picto" src="/static/pictos/nuevo.png"><br>Añadir Material</a>
 
 <div class="materiales-list">
     <?php if (empty($materiales)): ?>
