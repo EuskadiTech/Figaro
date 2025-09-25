@@ -1,5 +1,6 @@
 <?php
 require_once "../_incl/utils.php";
+require_permission("actividades.create");
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle form submission
     $id = uniqid();

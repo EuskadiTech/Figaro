@@ -1,4 +1,6 @@
 <?php
+require_once "../_incl/utils.php";
+require_permission("actividades.index");
 require_once "../_incl/pre-body.php";
 
 // Get activities
@@ -111,9 +113,11 @@ if ($show_past) {
     <h2>Próximas actividades</h2>
 <?php endif; ?>
 
+<?php if (user_has_access("actividades.create")): ?>
 <a href="crear_actividad.php" class="button" style="margin-bottom: 20px;">
     <img loading="lazy" class="picto" src="/static/pictos/nuevo.png"><br>
     Crear nueva actividad</a>
+<?php endif; ?>
 <br>
 
 <div id="activities-container">
@@ -159,14 +163,18 @@ if ($show_past) {
                 class="button">
                 <img loading="lazy" class="picto" src="/static/pictos/leer.png"><br>Leer detalles
             </a>
+            <?php if (user_has_access("actividades.update")): ?>
             <a href="editar_actividad.php?id=<?php echo urlencode($activity['id']); ?>&global=<?php echo $activity['_global'] ? '1' : '0'; ?>"
                 class="button">
 
                 <img loading="lazy" class="picto" src="/static/pictos/escribir.png"><br>Editar
             </a>
+            <?php endif; ?>
+            <?php if (user_has_access("actividades.delete")): ?>
             <a href="eliminar_actividad.php?id=<?php echo urlencode($activity['id']); ?>&global=<?php echo $activity['_global'] ? '1' : '0'; ?>"
                 onclick="return confirm('¿Estás seguro?');" class="button rojo">
                 <img loading="lazy" class="picto" src="/static/pictos/borrar.png"><br>Borrar</a>
+            <?php endif; ?>
         </div>
     <?php endforeach; ?>
 <?php endif; ?>

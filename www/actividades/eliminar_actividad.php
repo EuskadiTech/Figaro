@@ -1,4 +1,6 @@
 <?php
+require_once "../_incl/utils.php";
+require_permission("actividades.delete");
 require_once "../_incl/pre-body.php";
 
 if (isset($_GET['id'])) {

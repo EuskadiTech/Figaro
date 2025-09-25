@@ -1,4 +1,6 @@
 <?php
+require_once "../_incl/utils.php";
+require_permission("actividades.update");
 require_once "../_incl/pre-body.php";
 
 $id = $_GET['id'];

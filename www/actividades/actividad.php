@@ -1,4 +1,6 @@
 <?php
+require_once "../_incl/utils.php";
+require_permission("actividades.index");
 require_once "../_incl/pre-body.php";
 
 // Get activity ID and global flag from URL parameters
@@ -106,16 +108,20 @@ $activity['_global'] = $is_global;
 
 
     <div style="margin-top: 30px; text-align: center;">
+        <?php if (user_has_access("actividades.update")): ?>
         <a href="editar_actividad.php?id=<?php echo urlencode($activity['id']); ?>&global=<?php echo $is_global ? '1' : '0'; ?>"
             class="button">
             <img loading="lazy" class="picto" src="/static/pictos/escribir.png"><br>Editar
         </a>
+        <?php endif; ?>
         
+        <?php if (user_has_access("actividades.delete")): ?>
         <a href="eliminar_actividad.php?id=<?php echo urlencode($activity['id']); ?>&global=<?php echo $is_global ? '1' : '0'; ?>"
             onclick="return confirm('¿Estás seguro de que deseas eliminar esta actividad?');" 
             class="button rojo">
             <img loading="lazy" class="picto" src="/static/pictos/borrar.png"><br>Eliminar
         </a>
+        <?php endif; ?>
         <?php if (!empty($activity['meet'])): ?>
             <a href="<?php echo $activity["meet"]; ?>"
                 class="button">
