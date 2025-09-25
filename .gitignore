@@ -8,26 +8,6 @@ db.*.axd
 # ---> Galileo CI/CD
 version.txt
 
-# ---> Go build artifacts
-figaro
-figaro-*
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-*.test
-*.out
-vendor/
-
-# ---> Go modules
-go.sum
-
-# ---> SQLite databases
-*.db
-*.db-journal
-*.sqlite3
-
 # ---> Python
 # Byte-compiled / optimized / DLL files
 __pycache__/
