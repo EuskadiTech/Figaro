@@ -1,32 +1,17 @@
-# Build stage
-FROM golang:1.24-alpine AS builder
+# Copy SSL certificates for HTTPS requests (if needed)
+# Since we're using scratch as base image, we need to get certificates from a temporary alpine image
+FROM alpine:latest AS certs
+RUN apk --no-cache add ca-certificates
 
-# Install build dependencies
-RUN apk add --no-cache git gcc musl-dev sqlite-dev
-
-# Set working directory
-WORKDIR /app
-
-# Copy go mod and sum files
-COPY go.mod go.sum ./
-
-# Download dependencies
-RUN go mod download
-
-# Copy source code
-COPY . .
-
-# Build the application
-RUN CGO_ENABLED=1 GOOS=linux go build -a -ldflags '-linkmode external -extldflags "-static"' -o figaro ./cmd/figaro
-
-# Final stage
 FROM scratch
 
-# Copy the binary from builder stage
-COPY --from=builder /app/figaro /figaro
+# Copy the pre-built binary from the build context
+# The binary will be placed in the build context by the CI/CD pipeline
+ARG TARGETARCH
+COPY figaro-linux-${TARGETARCH} /figaro
 
-# Copy SSL certificates for HTTPS requests (if needed)
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+# Copy SSL certificates from alpine image
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 # Expose port
 EXPOSE 8080

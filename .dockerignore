@@ -1,0 +1,49 @@
+# Ignore files that don't need to be in Docker build context
+# This reduces context size and improves build performance
+
+# Git and CI/CD files
+.git/
+.github/
+.gitignore
+.dockerignore
+README.md
+CHANGELOG.md
+*.md
+
+# Build artifacts
+build.bat
+build.sh
+figaro
+figaro-*
+*.exe
+*.tar.gz
+
+# Data and uploads
+data/
+uploads/
+*.db
+*.sqlite
+*.sqlite3
+
+# Development and testing
+.vscode/
+.idea/
+*.log
+*.test
+coverage.out
+coverage.html
+
+# OS specific
+.DS_Store
+Thumbs.db
+.env
+.env.local
+
+# Legacy PHP files (if not needed in container)
+www/
+*.php
+
+# Temporary files
+*.tmp
+*.temp
+*~
