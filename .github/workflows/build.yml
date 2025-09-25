@@ -228,7 +228,7 @@ jobs:
         with:
           draft: false
           prerelease: ${{ contains(github.ref, '-') }}
-          files: ./artifacts/*/*.{exe,tar.gz,sha256}
+          files: ./artifacts/*/*.*
           generate_release_notes: true
           body: |
             ## Figaro Go Binary Release
@@ -240,7 +240,8 @@ jobs:
             - `figaro-linux-arm64` - Linux ARM64
             
             ### Windows  
-            - `figaro-windows-amd64.exe` - Windows x86_64
+            - `figaro-windowscross-amd64.exe` - Windows x86_64 cross compiled from Linux
+            - `figaro-windowsnative-amd64.exe` - Windows x86_64 native build (currently not available)
             
             ### macOS
             - `figaro-darwin-amd64` - macOS x86_64 (Intel)
