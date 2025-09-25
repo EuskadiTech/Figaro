@@ -98,22 +98,9 @@ $activity['_global'] = $is_global;
                 <img loading="lazy" class="picto" src="/static/pictos/texto.png">
                 Descripción:
             </h3>
-            <div style="background-color: white; padding: 15px; border-radius: 10px; border: 1px solid #ccc;">
+            <div style="background-color: white; padding: 15px; border-radius: 10px; border: 1px solid #ccc; display: inline-block;">
                 <?php echo nl2br(htmlspecialchars($activity['description'])); ?>
             </div>
-        </div>
-    <?php endif; ?>
-
-    <?php if (!empty($activity['url'])): ?>
-        <div style="margin-bottom: 15px;">
-            <h3>
-                <img loading="lazy" class="picto" src="/static/pictos/enlace.png">
-                Enlace:
-            </h3>
-            <a href="<?php echo htmlspecialchars($activity['url']); ?>" target="_blank" 
-               style="word-break: break-all; color: #2c5aa0; text-decoration: underline;">
-                <?php echo htmlspecialchars($activity['url']); ?>
-            </a>
         </div>
     <?php endif; ?>
 
