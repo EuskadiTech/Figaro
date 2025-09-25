@@ -127,8 +127,12 @@ $all_activities_sorted = array_merge($upcoming_activities, $past_activities);
                     <span style="font-size: xx-large;"><?php echo htmlspecialchars(explode("T", $activity['end'])[1]); ?>
                     </span> </span>
             </p>
-            <p><b>Descripción:</b> <?php echo nl2br(htmlspecialchars($activity['description'])); ?></p>
+            <!--<p><b>Descripción:</b> <?php echo nl2br(htmlspecialchars($activity['description'])); ?></p>-->
 
+            <a href="actividad.php?id=<?php echo urlencode($activity['id']); ?>&global=<?php echo $activity['_global'] ? '1' : '0'; ?>"
+                class="button">
+                <img loading="lazy" class="picto" src="/static/pictos/leer.png"><br>Leer detalles
+            </a>
             <a href="editar_actividad.php?id=<?php echo urlencode($activity['id']); ?>&global=<?php echo $activity['_global'] ? '1' : '0'; ?>"
                 class="button">
 
