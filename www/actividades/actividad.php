@@ -50,16 +50,6 @@ $activity['_global'] = $is_global;
 <div style="background-color: lightcyan; padding: 20px; margin-top: 10px; border-radius: 25px; border: 2px solid black;">
     <h1><?php echo htmlspecialchars($activity['title']); ?></h1>
     
-    <?php 
-    // Check if activity is outside working hours
-    $is_off_hours = is_off_hours($activity['start'], $activity['end'], $centro);
-    if ($is_off_hours): ?>
-        <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
-            <img loading="lazy" class="picto" src="/static/pictos/advertencia.png">
-            <strong>⚠️ Aviso:</strong> Esta actividad está programada fuera del horario de atención del centro.
-        </div>
-    <?php endif; ?>
-    
     <?php if ($is_global && isset($activity["is_shared_from"]) && $activity["is_shared_from"] != ""): ?>
         <p style="margin-bottom: 15px;">
             <img loading="lazy" class="picto" src="/static/pictos/compartir2.png">
