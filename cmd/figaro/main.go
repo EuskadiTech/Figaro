@@ -3,6 +3,7 @@
 package main
 
 import (
+	"html/template"
 	"log"
 	"os"
 	"os/signal"
@@ -36,6 +37,21 @@ func main() {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
+
+	// Load HTML templates
+	router.LoadHTMLGlob("internal/handlers/templates/*")
+	
+	// Add template functions
+	router.SetFuncMap(template.FuncMap{
+		"call": func(fn interface{}, args ...interface{}) interface{} {
+			if f, ok := fn.(func(string) bool); ok && len(args) > 0 {
+				if arg, ok := args[0].(string); ok {
+					return f(arg)
+				}
+			}
+			return false
+		},
+	})
 
 	// Routes that don't require authentication
 	router.GET("/login", h.Login)

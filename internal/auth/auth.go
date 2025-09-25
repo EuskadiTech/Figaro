@@ -81,7 +81,7 @@ func GetUserPermissions(userID int) ([]string, error) {
 
 // VerifyPassword checks if the provided password matches the user's password hash
 func VerifyPassword(user *models.User, password string) error {
-	// First try bcrypt (new format)
+	// First try bcrypt (standard format works with $2y$ from PHP)
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err == nil {
 		return nil
 	}

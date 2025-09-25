@@ -5,12 +5,10 @@ import (
 	"database/sql"
 	"embed"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/sqlite3"
-	"github.com/golang-migrate/migrate/v4/source/iofs"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -48,36 +46,34 @@ func Initialize(dataDir string) error {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
 
+	// Test that we can query the database after migrations
+	var count int
+	err = db.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
+	if err != nil {
+		return fmt.Errorf("failed to test database connection after migrations: %w", err)
+	}
+	log.Printf("Database initialized successfully with %d users", count)
+
 	return nil
 }
 
-// runMigrations executes database migrations
+// runMigrations executes database migrations using simple SQL execution
 func runMigrations(db *sql.DB) error {
-	// Create migration source from embedded filesystem
-	sourceDriver, err := iofs.New(migrationFS, "migrations")
+	log.Printf("Running database migrations...")
+
+	// Read migration file
+	migrationSQL, err := migrationFS.ReadFile("migrations/001_initial_schema.up.sql")
 	if err != nil {
-		return fmt.Errorf("failed to create migration source: %w", err)
+		return fmt.Errorf("failed to read migration file: %w", err)
 	}
 
-	// Create database driver
-	dbDriver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
+	// Execute migration SQL
+	_, err = db.Exec(string(migrationSQL))
 	if err != nil {
-		return fmt.Errorf("failed to create database driver: %w", err)
+		return fmt.Errorf("failed to execute migration: %w", err)
 	}
 
-	// Create migrate instance
-	m, err := migrate.NewWithInstance("iofs", sourceDriver, "sqlite3", dbDriver)
-	if err != nil {
-		return fmt.Errorf("failed to create migrate instance: %w", err)
-	}
-	defer m.Close()
-
-	// Run migrations
-	err = m.Up()
-	if err != nil && err != migrate.ErrNoChange {
-		return fmt.Errorf("failed to apply migrations: %w", err)
-	}
-
+	log.Printf("Database migrations completed successfully")
 	return nil
 }
 
