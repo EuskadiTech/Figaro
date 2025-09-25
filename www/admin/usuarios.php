@@ -79,14 +79,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $users = get_all_users();
 $available_permissions = [
-    'ADMIN' => 'Administrator (full access)',
-    'materiales.index' => 'View materials',
-    'materiales.create' => 'Create materials',
-    'materiales.update' => 'Edit materials',
-    'materiales.delete' => 'Delete materials',
-    'actividades.index' => 'View activities',
-    'archivos.index' => 'View files',
-    'module2' => 'Module 2 access'
+    'ADMIN' => 'Administrador (Acceso completo)',
+    'materiales.index' => 'Ver materales',
+    'materiales.create' => 'Crear materiales',
+    'materiales.update' => 'Actualizar materiales',
+    'materiales.delete' => 'Borrar materiales',
+    'actividades.index' => 'Ver actividades',
+    'actividades.create' => 'Crear actividades',
+    'actividades.update' => 'Actualizar actividades',
+    'actividades.delete' => 'Borrar actividades',
+    'archivos.index' => 'Ver archivos',
 ];
 ?>
 
