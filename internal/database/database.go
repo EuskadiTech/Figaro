@@ -29,7 +29,7 @@ func Initialize(dataDir string) error {
 
 	// Database file path
 	dbPath := filepath.Join(dataDir, "figaro.db")
-	
+
 	// Open database connection
 	db, err := sql.Open("sqlite3", dbPath+"?_foreign_keys=ON")
 	if err != nil {
@@ -76,14 +76,14 @@ func runMigrations(db *sql.DB) error {
 			migrationFiles = append(migrationFiles, entry.Name())
 		}
 	}
-	
+
 	// Sort to ensure migrations run in order
 	sort.Strings(migrationFiles)
 
 	// Execute each migration
 	for _, filename := range migrationFiles {
 		log.Printf("Applying migration: %s", filename)
-		
+
 		migrationSQL, err := migrationFS.ReadFile("migrations/" + filename)
 		if err != nil {
 			return fmt.Errorf("failed to read migration file %s: %w", filename, err)
@@ -92,9 +92,14 @@ func runMigrations(db *sql.DB) error {
 		// Execute migration SQL
 		_, err = db.Exec(string(migrationSQL))
 		if err != nil {
+			// Check if this is a "column already exists" error and ignore it
+			if strings.Contains(err.Error(), "duplicate column name") {
+				log.Printf("Migration %s: Column already exists, skipping", filename)
+				continue
+			}
 			return fmt.Errorf("failed to execute migration %s: %w", filename, err)
 		}
-		
+
 		log.Printf("Applied migration: %s", filename)
 	}
 

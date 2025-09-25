@@ -119,31 +119,7 @@
     {{end}}
     
     <main id="container" class="container-fluid py-3">
-        {{if eq .ContentTemplate "index"}}
-            {{if .Flash}}
-            <div class="alert alert-danger text-center" role="alert">
-                <strong>⚠️ Acceso Denegado:</strong> {{.Flash}}
-            </div>
-            {{end}}
-
-            <div class="text-center">
-                <h2>¡Hola {{.User.DisplayName}}!</h2>
-                <h1>Bienvenidx a Figaró</h1>
-                <em class="text-muted">Utiliza el menú superior para acceder a los modulos a los que tienes acceso</em>
-            </div>
-        {{else if eq .ContentTemplate "profile"}}
-            {{template "profile-content" .}}
-        {{else if eq .ContentTemplate "elegir_centro"}}
-            {{template "elegir-centro-content" .}}
-        {{else if eq .ContentTemplate "materiales"}}
-            {{template "materiales-content" .}}
-        {{else if eq .ContentTemplate "actividades"}}
-            {{template "actividades-content" .}}
-        {{else if eq .ContentTemplate "admin"}}
-            {{template "admin-content" .}}
-        {{else}}
-            {{template "content" .}}
-        {{end}}
+        {{template "content" .}}
     </main>
     <script src="/static/bootstrap.bundle.min.js"></script>
 </body>

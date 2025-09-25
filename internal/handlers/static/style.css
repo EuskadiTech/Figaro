@@ -498,3 +498,16 @@ fieldset legend {
   height: 70px;
   width: 70px;
 }
+
+.picto-small {
+  margin: 0;
+  padding: 2px;
+  text-align: center;
+  display: inline-block;
+  border: 1px solid black;
+  border-radius: 3px;
+  background-color: white;
+  color: black;
+  height: 16px;
+  width: 16px;
+}

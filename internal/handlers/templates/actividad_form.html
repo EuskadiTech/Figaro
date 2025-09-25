@@ -1,0 +1,220 @@
+{{define "content"}}
+<div class="activity-form-container">
+    <h1>{{if eq .Action "crear"}}Crear Nueva Actividad{{else}}Editar Actividad{{end}}</h1>
+    
+    <div class="form-card">
+        {{if .ErrorMessage}}
+        <div class="alert alert-danger">
+            {{.ErrorMessage}}
+        </div>
+        {{end}}
+
+        <form method="POST" class="activity-form">
+            <div class="form-group">
+                <label for="titulo">Título de la Actividad *</label>
+                <input type="text" 
+                       id="titulo" 
+                       name="titulo" 
+                       value="{{if .Activity}}{{.Activity.Title}}{{else if .FormData}}{{.FormData.titulo}}{{end}}" 
+                       required 
+                       placeholder="Ej: Clase de Matemáticas">
+            </div>
+
+            <div class="form-group">
+                <label for="descripcion">Descripción</label>
+                <textarea id="descripcion" 
+                          name="descripcion" 
+                          rows="4" 
+                          placeholder="Descripción detallada de la actividad">{{if .Activity}}{{.Activity.Description}}{{else if .FormData}}{{.FormData.descripcion}}{{end}}</textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group half">
+                    <label for="fecha_inicio">Fecha de Inicio *</label>
+                    <input type="date" 
+                           id="fecha_inicio" 
+                           name="fecha_inicio" 
+                           value="{{if .Activity}}{{.Activity.StartDatetime.Format "2006-01-02"}}{{else if .FormData}}{{.FormData.fecha_inicio}}{{end}}" 
+                           required>
+                </div>
+
+                <div class="form-group half">
+                    <label for="hora_inicio">Hora de Inicio *</label>
+                    <input type="time" 
+                           id="hora_inicio" 
+                           name="hora_inicio" 
+                           value="{{if .Activity}}{{.Activity.StartDatetime.Format "15:04"}}{{else if .FormData}}{{.FormData.hora_inicio}}{{end}}" 
+                           required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group half">
+                    <label for="fecha_fin">Fecha de Fin *</label>
+                    <input type="date" 
+                           id="fecha_fin" 
+                           name="fecha_fin" 
+                           value="{{if .Activity}}{{.Activity.EndDatetime.Format "2006-01-02"}}{{else if .FormData}}{{.FormData.fecha_fin}}{{end}}" 
+                           required>
+                </div>
+
+                <div class="form-group half">
+                    <label for="hora_fin">Hora de Fin *</label>
+                    <input type="time" 
+                           id="hora_fin" 
+                           name="hora_fin" 
+                           value="{{if .Activity}}{{.Activity.EndDatetime.Format "15:04"}}{{else if .FormData}}{{.FormData.hora_fin}}{{end}}" 
+                           required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" 
+                           name="global" 
+                           value="1" 
+                           {{if .Activity}}{{if .Activity.IsGlobal}}checked{{end}}{{else if .FormData}}{{if .FormData.global}}checked{{end}}{{end}}>
+                    Actividad Global (visible en todos los centros)
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label for="meeting_url">URL de Reunión</label>
+                <input type="url" 
+                       id="meeting_url" 
+                       name="meeting_url" 
+                       value="{{if .Activity}}{{if .Activity.MeetingURL}}{{.Activity.MeetingURL}}{{end}}{{else if .FormData}}{{.FormData.meeting_url}}{{end}}" 
+                       placeholder="https://zoom.us/j/123456789">
+            </div>
+
+            <div class="form-group">
+                <label for="web_url">URL Web</label>
+                <input type="url" 
+                       id="web_url" 
+                       name="web_url" 
+                       value="{{if .Activity}}{{if .Activity.WebURL}}{{.Activity.WebURL}}{{end}}{{else if .FormData}}{{.FormData.web_url}}{{end}}" 
+                       placeholder="https://ejemplo.com">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="button azul">
+                    <img loading="lazy" class="picto-small" src="/static/pictos/escribir.png">
+                    {{if eq .Action "crear"}}Crear Actividad{{else}}Guardar Cambios{{end}}
+                </button>
+                <a href="/actividades" class="button">
+                    <img loading="lazy" class="picto-small" src="/static/pictos/cancelar.png">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.activity-form-container {
+    max-width: 700px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.form-card {
+    background: white;
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.activity-form .form-group {
+    margin-bottom: 20px;
+}
+
+.activity-form .form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.activity-form .form-group.half {
+    flex: 1;
+}
+
+.activity-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+.activity-form input,
+.activity-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.activity-form input:focus,
+.activity-form textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0,123,255,0.3);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    font-weight: normal !important;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+@media (max-width: 768px) {
+    .activity-form-container {
+        margin: 10px;
+        padding: 10px;
+    }
+    
+    .form-card {
+        padding: 20px;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .button {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+}
+</style>
+{{end}}

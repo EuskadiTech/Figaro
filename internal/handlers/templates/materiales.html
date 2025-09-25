@@ -1,4 +1,4 @@
-{{define "materiales-content"}}
+{{define "content"}}
 <div class="materiales-container">
     <h1>Inventario de Materiales - {{.Centro}}</h1>
     
@@ -55,11 +55,13 @@
                         </a>
                         {{end}}
                         {{if call $.HasAccess "materiales.delete"}}
-                        <a href="/materiales/eliminar/{{.ID}}" class="button small rojo" 
-                           onclick="return confirm('¿Estás seguro de que quieres eliminar este material?')">
-                            <img loading="lazy" class="picto-small" src="/static/pictos/borrar.png">
-                            Eliminar
-                        </a>
+                        <form method="POST" action="/materiales/eliminar/{{.ID}}" style="display: inline;">
+                            <button type="submit" class="button small rojo"
+                                    onclick="return confirm('¿Estás seguro de que quieres eliminar este material?')">
+                                <img loading="lazy" class="picto-small" src="/static/pictos/borrar.png">
+                                Eliminar
+                            </button>
+                        </form>
                         {{end}}
                     </td>
                 </tr>
@@ -189,4 +191,5 @@
     }
 }
 </style>
+</div>
 {{end}}

@@ -3,7 +3,6 @@
 package main
 
 import (
-	"html/template"
 	"log"
 	"os"
 	"os/signal"
@@ -19,7 +18,7 @@ import (
 func main() {
 	// Load configuration
 	cfg := config.Load()
-	
+
 	// Initialize database
 	if err := database.Initialize(cfg.DataDir); err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
@@ -33,28 +32,10 @@ func main() {
 	if os.Getenv("GIN_MODE") == "" {
 		gin.SetMode(gin.ReleaseMode) // Production mode by default
 	}
-	
+
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
-
-	// Load HTML templates from embedded filesystem
-	tmpl := handlers.CreateHTMLTemplate()
-	
-	// Add template functions
-	tmpl = tmpl.Funcs(template.FuncMap{
-		"call": func(fn interface{}, args ...interface{}) interface{} {
-			if f, ok := fn.(func(string) bool); ok && len(args) > 0 {
-				if arg, ok := args[0].(string); ok {
-					return f(arg)
-				}
-			}
-			return false
-		},
-	})
-	
-	// Set HTML template on router
-	router.SetHTMLTemplate(tmpl)
 
 	// Routes that don't require authentication
 	router.GET("/login", h.Login)
@@ -71,25 +52,42 @@ func main() {
 		authGroup.POST("/perfil", h.ProfilePost)
 		authGroup.GET("/elegir_centro", h.ElegirCentro)
 		authGroup.POST("/elegir_centro", h.ElegirCentro)
-		
+
 		// Materials module
 		authGroup.GET("/materiales", h.MaterialesIndex)
-		
+		authGroup.GET("/materiales/crear", h.MaterialesCrear)
+		authGroup.POST("/materiales/crear", h.MaterialesCrear)
+		authGroup.GET("/materiales/editar/:id", h.MaterialesEditar)
+		authGroup.POST("/materiales/editar/:id", h.MaterialesEditar)
+		authGroup.POST("/materiales/eliminar/:id", h.MaterialesEliminar)
+
 		// Activities module
 		authGroup.GET("/actividades", h.ActividadesIndex)
-		
+		authGroup.GET("/actividades/crear", h.ActividadesCrear)
+		authGroup.POST("/actividades/crear", h.ActividadesCrear)
+		authGroup.GET("/actividades/editar/:id", h.ActividadesEditar)
+		authGroup.POST("/actividades/editar/:id", h.ActividadesEditar)
+		authGroup.POST("/actividades/eliminar/:id", h.ActividadesEliminar)
+
 		// Admin module
 		authGroup.GET("/admin", h.AdminIndex)
+		authGroup.GET("/admin/usuarios", h.AdminUsuarios)
+		authGroup.GET("/admin/usuarios/crear", h.AdminUsuarioCrear)
+		authGroup.POST("/admin/usuarios/crear", h.AdminUsuarioCrear)
+		authGroup.GET("/admin/usuarios/editar/:id", h.AdminUsuarioEditar)
+		authGroup.POST("/admin/usuarios/editar/:id", h.AdminUsuarioEditar)
+		authGroup.POST("/admin/usuarios/eliminar/:id", h.AdminUsuarioEliminar)
+		authGroup.GET("/admin/centros", h.AdminCentros)
 	}
 
 	// Start server
 	log.Printf("Starting Figaro server on %s:%s", cfg.Host, cfg.Port)
 	log.Printf("Data directory: %s", cfg.DataDir)
-	
+
 	// Handle graceful shutdown
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
-	
+
 	go func() {
 		<-c
 		log.Println("Shutting down gracefully...")
