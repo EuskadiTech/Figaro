@@ -4,6 +4,7 @@ package handlers
 import (
 	"database/sql"
 	"embed"
+	"html/template"
 	"net/http"
 	"strings"
 
@@ -16,6 +17,9 @@ import (
 
 //go:embed static/*
 var staticFS embed.FS
+
+//go:embed templates/*
+var templateFS embed.FS
 
 // Handlers holds the application handlers and dependencies
 type Handlers struct {
@@ -33,6 +37,34 @@ func New(cfg *config.Config) *Handlers {
 	return &Handlers{
 		Config: cfg,
 	}
+}
+
+// CreateHTMLTemplate creates HTML template from embedded templates
+func CreateHTMLTemplate() *template.Template {
+	tmpl := template.New("base")
+	
+	// Parse all template files from embedded filesystem
+	entries, err := templateFS.ReadDir("templates")
+	if err != nil {
+		panic("Failed to read templates directory: " + err.Error())
+	}
+	
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".html") {
+			content, err := templateFS.ReadFile("templates/" + entry.Name())
+			if err != nil {
+				panic("Failed to read template " + entry.Name() + ": " + err.Error())
+			}
+			
+			// Parse the template content
+			_, err = tmpl.New(entry.Name()).Parse(string(content))
+			if err != nil {
+				panic("Failed to parse template " + entry.Name() + ": " + err.Error())
+			}
+		}
+	}
+	
+	return tmpl
 }
 
 // getCommonData creates common template data
