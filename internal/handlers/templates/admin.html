@@ -1,224 +1,149 @@
 {{define "admin-content"}}
-<div class="admin-container">
-    <h1>Panel de Administración</h1>
+<div class="container-fluid">
+    <h1 class="mb-4">Panel de Administración</h1>
     
-    <div class="admin-grid">
-        <div class="admin-card">
-            <h3>
-                <img loading="lazy" class="picto" src="/static/pictos/material_escolar.png">
-                Gestión de Materiales
-            </h3>
-            <p>Administra el inventario de materiales de todos los centros.</p>
-            <div class="card-actions">
-                <a href="/admin/materiales-report" class="button">
-                    <img loading="lazy" class="picto-small" src="/static/pictos/buscar.png">
-                    Informe por Centro
-                </a>
+    <div class="row g-4 mb-5">
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title d-flex align-items-center">
+                        <img loading="lazy" class="me-2" src="/static/pictos/material_escolar.png" style="width: 24px; height: 24px;">
+                        Gestión de Materiales
+                    </h5>
+                    <p class="card-text">Administra el inventario de materiales de todos los centros.</p>
+                    <div class="d-flex gap-2">
+                        <a href="/admin/materiales-report" class="btn btn-primary btn-sm">
+                            <img loading="lazy" class="me-1" src="/static/pictos/buscar.png" style="width: 16px; height: 16px;">
+                            Informe por Centro
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="admin-card">
-            <h3>
-                <img loading="lazy" class="picto" src="/static/pictos/centro.png">
-                Gestión de Centros
-            </h3>
-            <p>Administra centros educativos y sus configuraciones.</p>
-            <div class="card-actions">
-                <a href="/admin/centros" class="button">
-                    <img loading="lazy" class="picto-small" src="/static/pictos/escribir.png">
-                    Gestionar Centros
-                </a>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title d-flex align-items-center">
+                        <img loading="lazy" class="me-2" src="/static/pictos/centro.png" style="width: 24px; height: 24px;">
+                        Gestión de Centros
+                    </h5>
+                    <p class="card-text">Administra centros educativos y sus configuraciones.</p>
+                    <div class="d-flex gap-2">
+                        <a href="/admin/centros" class="btn btn-primary btn-sm">
+                            <img loading="lazy" class="me-1" src="/static/pictos/escribir.png" style="width: 16px; height: 16px;">
+                            Gestionar Centros
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="admin-card">
-            <h3>
-                <img loading="lazy" class="picto" src="/static/pictos/nombre.png">
-                Gestión de Usuarios
-            </h3>
-            <p>Administra usuarios, permisos y roles del sistema.</p>
-            <div class="card-actions">
-                <a href="/admin/usuarios" class="button">
-                    <img loading="lazy" class="picto-small" src="/static/pictos/escribir.png">
-                    Gestionar Usuarios
-                </a>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title d-flex align-items-center">
+                        <img loading="lazy" class="me-2" src="/static/pictos/nombre.png" style="width: 24px; height: 24px;">
+                        Gestión de Usuarios
+                    </h5>
+                    <p class="card-text">Administra usuarios, permisos y roles del sistema.</p>
+                    <div class="d-flex gap-2">
+                        <a href="/admin/usuarios" class="btn btn-primary btn-sm">
+                            <img loading="lazy" class="me-1" src="/static/pictos/escribir.png" style="width: 16px; height: 16px;">
+                            Gestionar Usuarios
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="admin-card">
-            <h3>
-                <img loading="lazy" class="picto" src="/static/pictos/archivos.png">
-                Gestión de Archivos
-            </h3>
-            <p>Administra archivos y documentos del sistema.</p>
-            <div class="card-actions">
-                <a href="/admin/files" class="button">
-                    <img loading="lazy" class="picto-small" src="/static/pictos/archivos.png">
-                    Explorar Archivos
-                </a>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title d-flex align-items-center">
+                        <img loading="lazy" class="me-2" src="/static/pictos/archivos.png" style="width: 24px; height: 24px;">
+                        Gestión de Archivos
+                    </h5>
+                    <p class="card-text">Administra archivos y documentos del sistema.</p>
+                    <div class="d-flex gap-2">
+                        <a href="/admin/files" class="btn btn-primary btn-sm">
+                            <img loading="lazy" class="me-1" src="/static/pictos/escribir.png" style="width: 16px; height: 16px;">
+                            Explorar Archivos
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="admin-card">
-            <h3>
-                <img loading="lazy" class="picto" src="/static/pictos/actividades.png">
-                Gestión de Actividades
-            </h3>
-            <p>Supervisa actividades globales y por centro.</p>
-            <div class="card-actions">
-                <a href="/admin/actividades-report" class="button">
-                    <img loading="lazy" class="picto-small" src="/static/pictos/buscar.png">
-                    Informe de Actividades
-                </a>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title d-flex align-items-center">
+                        <img loading="lazy" class="me-2" src="/static/pictos/actividades.png" style="width: 24px; height: 24px;">
+                        Gestión de Actividades
+                    </h5>
+                    <p class="card-text">Supervisa actividades globales y por centro.</p>
+                    <div class="d-flex gap-2">
+                        <a href="/admin/actividades-report" class="btn btn-primary btn-sm">
+                            <img loading="lazy" class="me-1" src="/static/pictos/buscar.png" style="width: 16px; height: 16px;">
+                            Informe de Actividades
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="admin-card">
-            <h3>
-                <img loading="lazy" class="picto" src="/static/pictos/datacenter.png">
-                Configuración del Sistema
-            </h3>
-            <p>Configuraciones avanzadas y parámetros del sistema.</p>
-            <div class="card-actions">
-                <a href="/admin/configuracion" class="button">
-                    <img loading="lazy" class="picto-small" src="/static/pictos/escribir.png">
-                    Configurar Sistema
-                </a>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title d-flex align-items-center">
+                        <img loading="lazy" class="me-2" src="/static/pictos/datacenter.png" style="width: 24px; height: 24px;">
+                        Configuración del Sistema
+                    </h5>
+                    <p class="card-text">Configuraciones avanzadas y parámetros del sistema.</p>
+                    <div class="d-flex gap-2">
+                        <a href="/admin/configuracion" class="btn btn-primary btn-sm">
+                            <img loading="lazy" class="me-1" src="/static/pictos/escribir.png" style="width: 16px; height: 16px;">
+                            Configurar Sistema
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="system-info">
-        <h2>Información del Sistema</h2>
-        <div class="info-grid">
-            <div class="info-item">
-                <strong>Versión:</strong>
-                <span>Figaro Go v2.0.0</span>
-            </div>
-            <div class="info-item">
-                <strong>Base de Datos:</strong>
-                <span>SQLite</span>
-            </div>
-            <div class="info-item">
-                <strong>Usuarios Activos:</strong>
-                <span id="active-users">Cargando...</span>
-            </div>
-            <div class="info-item">
-                <strong>Sesiones Activas:</strong>
-                <span id="active-sessions">Cargando...</span>
+    <div class="card">
+        <div class="card-header">
+            <h2 class="mb-0">Información del Sistema</h2>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-sm-6 col-md-3">
+                    <div class="bg-light p-3 rounded">
+                        <strong class="text-muted">Versión:</strong>
+                        <div class="fw-bold">Figaro Go v2.0.0</div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <div class="bg-light p-3 rounded">
+                        <strong class="text-muted">Base de Datos:</strong>
+                        <div class="fw-bold">SQLite</div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <div class="bg-light p-3 rounded">
+                        <strong class="text-muted">Usuarios Activos:</strong>
+                        <div class="fw-bold" id="active-users">2</div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <div class="bg-light p-3 rounded">
+                        <strong class="text-muted">Sesiones Activas:</strong>
+                        <div class="fw-bold" id="active-sessions">1</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-.admin-container {
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 20px;
-}
-
-.admin-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-    margin-bottom: 40px;
-}
-
-.admin-card {
-    background: white;
-    border: 2px solid #ddd;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: transform 0.2s ease;
-}
-
-.admin-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    border-color: #007cba;
-}
-
-.admin-card h3 {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 15px;
-    color: #333;
-}
-
-.admin-card p {
-    color: #666;
-    margin-bottom: 20px;
-}
-
-.card-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.system-info {
-    background: white;
-    border: 2px solid #ddd;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-top: 15px;
-}
-
-.info-item {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 6px;
-    border-left: 4px solid #007cba;
-}
-
-.info-item strong {
-    color: #333;
-    font-size: 14px;
-}
-
-.info-item span {
-    color: #666;
-    font-size: 16px;
-    font-weight: bold;
-}
-
-.picto-small {
-    width: 16px;
-    height: 16px;
-}
-
-@media (max-width: 768px) {
-    .admin-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .info-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .card-actions {
-        flex-direction: column;
-    }
-}
-</style>
-
-<script>
-// Simulate loading system info
-setTimeout(() => {
-    document.getElementById('active-users').textContent = '{{len .User.Permissions}}';
-    document.getElementById('active-sessions').textContent = '1'; // Current session
-}, 500);
-</script>
 {{end}}
