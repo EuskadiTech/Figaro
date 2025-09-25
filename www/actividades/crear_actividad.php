@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $is_global = isset($_POST['global']) && $_POST['global'] == '1';
     $centro = $_SESSION['centro'];
     $aula = $_SESSION['aula'];
-    $dir = "$RUTA_DATOS/Actividades/$centro/$aula";
+    $dir = "$RUTA_DATOS/Actividades/$centro";
     if ($is_global) {
         $dir = "$RUTA_DATOS/Actividades/_Global";
         $data["is_shared_from"] = $centro;

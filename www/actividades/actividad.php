@@ -17,7 +17,7 @@ $aula = $_SESSION['aula'];
 if ($is_global) {
     $activity_dir = "$RUTA_DATOS/Actividades/_Global";
 } else {
-    $activity_dir = "$RUTA_DATOS/Actividades/$centro/$aula";
+    $activity_dir = "$RUTA_DATOS/Actividades/$centro";
 }
 
 // Load the activity
@@ -95,7 +95,7 @@ $activity['_global'] = $is_global;
     <?php if (!empty($activity['description'])): ?>
         <div style="margin-bottom: 20px;">
             <h3>
-                <img loading="lazy" class="picto" src="/static/pictos/descripcion.png">
+                <img loading="lazy" class="picto" src="/static/pictos/texto.png">
                 Descripción:
             </h3>
             <div style="background-color: white; padding: 15px; border-radius: 10px; border: 1px solid #ccc;">
@@ -117,17 +117,6 @@ $activity['_global'] = $is_global;
         </div>
     <?php endif; ?>
 
-    <?php if (!empty($activity['meet'])): ?>
-        <div style="margin-bottom: 15px;">
-            <h3>
-                <img loading="lazy" class="picto" src="/static/pictos/videollamada.png">
-                Videollamada:
-            </h3>
-            <div style="background-color: white; padding: 10px; border-radius: 10px; border: 1px solid #ccc;">
-                <?php echo htmlspecialchars($activity['meet']); ?>
-            </div>
-        </div>
-    <?php endif; ?>
 
     <div style="margin-top: 30px; text-align: center;">
         <a href="editar_actividad.php?id=<?php echo urlencode($activity['id']); ?>&global=<?php echo $is_global ? '1' : '0'; ?>"
@@ -140,6 +129,18 @@ $activity['_global'] = $is_global;
             class="button rojo">
             <img loading="lazy" class="picto" src="/static/pictos/borrar.png"><br>Eliminar
         </a>
+        <?php if (!empty($activity['meet'])): ?>
+            <a href="<?php echo $activity["meet"]; ?>"
+                class="button">
+                <img loading="lazy" class="picto" src="/static/pictos/telefono.png"><br>Abrir videollamada
+            </a>
+        <?php endif; ?>
+        <?php if (!empty($activity['url'])): ?>
+            <a href="<?php echo $activity["url"]; ?>"
+                class="button">
+                <img loading="lazy" class="picto" src="/static/pictos/web.png"><br>Abrir sitio web
+            </a>
+        <?php endif; ?>
     </div>
 </div>
 

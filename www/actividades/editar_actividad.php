@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $is_global = isset($_POST['global']) && $_POST['global'] == '1';
     $new_centro = $is_global ? '_Global' : $_SESSION['centro'];
-    $new_dir = "$RUTA_DATOS/Actividades/$new_centro/$aula";
+    $new_dir = "$RUTA_DATOS/Actividades/$new_centro";
     
     if ($is_global) {$data["is_shared_from"] = $_SESSION['centro']; $new_dir = "$RUTA_DATOS/Actividades/_Global";}
     // If the 'global' status changes, move the file

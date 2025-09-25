@@ -25,7 +25,7 @@ function get_activities_from_dir($dir, $is_global = false)
     return $activities;
 }
 
-$local_activities = get_activities_from_dir("$RUTA_DATOS/Actividades/$centro/$aula");
+$local_activities = get_activities_from_dir("$RUTA_DATOS/Actividades/$centro");
 $global_activities = get_activities_from_dir("$RUTA_DATOS/Actividades/_Global", true);
 $all_activities = array_merge($local_activities, $global_activities);
 
