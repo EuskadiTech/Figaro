@@ -3,7 +3,6 @@ package handlers
 
 import (
 	"embed"
-	"log"
 	"net/http"
 	"strings"
 
