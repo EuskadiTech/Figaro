@@ -1,66 +1,196 @@
-name: Build and publish
+name: Build and Release Figaro Go
+
 on:
   push:
     branches:
-      - auth
       - main
     tags:
       - "v*.*.*"
+  pull_request:
+    branches:
+      - main
 
 jobs:
+  # Build Go binaries for multiple platforms
+  build-binaries:
+    name: Build Binaries
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            name: figaro-linux-amd64
+          - goos: linux
+            goarch: arm64
+            name: figaro-linux-arm64
+          - goos: windows
+            goarch: amd64
+            name: figaro-windows-amd64.exe
+          - goos: darwin
+            goarch: amd64
+            name: figaro-darwin-amd64
+          - goos: darwin
+            goarch: arm64
+            name: figaro-darwin-arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 1
+        run: |
+          if [ "${{ matrix.goos }}" = "linux" ]; then
+            # For Linux, we need to install cross-compilation tools
+            if [ "${{ matrix.goarch }}" = "arm64" ]; then
+              sudo apt-get update
+              sudo apt-get install -y gcc-aarch64-linux-gnu
+              export CC=aarch64-linux-gnu-gcc
+            fi
+            go build -ldflags="-s -w -extldflags=-static" -o ${{ matrix.name }} ./cmd/figaro
+          elif [ "${{ matrix.goos }}" = "windows" ]; then
+            # For Windows, disable CGO due to cross-compilation complexity
+            CGO_ENABLED=0 go build -ldflags="-s -w" -o ${{ matrix.name }} ./cmd/figaro
+          else
+            # For macOS and others
+            CGO_ENABLED=0 go build -ldflags="-s -w" -o ${{ matrix.name }} ./cmd/figaro
+          fi
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.name }}
+
+  # Build and push Docker images for multiple platforms
   build-docker:
-    env:
-      # Use docker.io for Docker Hub if empty
-      REGISTRY: ghcr.io
-      # github.repository as <account>/<repo>
-      IMAGE_NAME: ${{ github.repository }}
-    name: Build Docker
+    name: Build Docker Images
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-      # This is used to complete the identity challenge
-      # with sigstore/fulcio when running outside of PRs.
       id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Set up BuildKit Docker container builder to be able to build
-      # multi-platform images and export cache
-      # https://github.com/docker/setup-buildx-action
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+        uses: docker/setup-buildx-action@v3
 
-      # Login against a Docker registry except on PR
-      # https://github.com/docker/login-action
-      - name: Log into registry ${{ env.REGISTRY }}
+      - name: Log in to Container Registry
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Extract metadata (tags, labels) for Docker
-      # https://github.com/docker/metadata-action
-      - name: Extract Docker metadata
+      - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
+        uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
 
-      # Build and push Docker image with Buildx (don't push on PR)
-      # https://github.com/docker/build-push-action
       - name: Build and push Docker image
-        id: build-and-push
-        uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
+        uses: docker/build-push-action@v6
         with:
           context: .
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: linux/arm64,linux/amd64,linux/arm/v7
+
+  # Create GitHub release with binaries (only on tags)
+  release:
+    name: Create Release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build-binaries, build-docker]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Create checksums
+        run: |
+          cd ./artifacts
+          for dir in */; do
+            cd "$dir"
+            for file in *; do
+              if [ -f "$file" ]; then
+                sha256sum "$file" > "$file.sha256"
+              fi
+            done
+            cd ..
+          done
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          prerelease: ${{ contains(github.ref, '-') }}
+          files: ./artifacts/*/*.{exe,tar.gz,sha256}
+          generate_release_notes: true
+          body: |
+            ## Figaro Go Binary Release
+            
+            This release contains pre-compiled binaries for multiple platforms:
+            
+            ### Linux
+            - `figaro-linux-amd64` - Linux x86_64
+            - `figaro-linux-arm64` - Linux ARM64
+            
+            ### Windows  
+            - `figaro-windows-amd64.exe` - Windows x86_64
+            
+            ### macOS
+            - `figaro-darwin-amd64` - macOS x86_64 (Intel)
+            - `figaro-darwin-arm64` - macOS ARM64 (Apple Silicon)
+            
+            ### Docker Images
+            Multi-platform Docker images are also available:
+            ```bash
+            docker run --rm -p 8080:8080 -v $(pwd)/data:/data ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+            ```
+            
+            ### Usage
+            1. Download the binary for your platform
+            2. Make it executable: `chmod +x figaro-*`
+            3. Run: `./figaro-*`
+            4. Open http://localhost:8080 in your browser
+            5. Login with username: `demo`, password: `demo`

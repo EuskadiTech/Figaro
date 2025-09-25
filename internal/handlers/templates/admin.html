@@ -1,0 +1,224 @@
+{{define "admin-content"}}
+<div class="admin-container">
+    <h1>Panel de Administración</h1>
+    
+    <div class="admin-grid">
+        <div class="admin-card">
+            <h3>
+                <img loading="lazy" class="picto" src="/static/pictos/material_escolar.png">
+                Gestión de Materiales
+            </h3>
+            <p>Administra el inventario de materiales de todos los centros.</p>
+            <div class="card-actions">
+                <a href="/admin/materiales-report" class="button">
+                    <img loading="lazy" class="picto-small" src="/static/pictos/buscar.png">
+                    Informe por Centro
+                </a>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <h3>
+                <img loading="lazy" class="picto" src="/static/pictos/centro.png">
+                Gestión de Centros
+            </h3>
+            <p>Administra centros educativos y sus configuraciones.</p>
+            <div class="card-actions">
+                <a href="/admin/centros" class="button">
+                    <img loading="lazy" class="picto-small" src="/static/pictos/escribir.png">
+                    Gestionar Centros
+                </a>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <h3>
+                <img loading="lazy" class="picto" src="/static/pictos/nombre.png">
+                Gestión de Usuarios
+            </h3>
+            <p>Administra usuarios, permisos y roles del sistema.</p>
+            <div class="card-actions">
+                <a href="/admin/usuarios" class="button">
+                    <img loading="lazy" class="picto-small" src="/static/pictos/escribir.png">
+                    Gestionar Usuarios
+                </a>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <h3>
+                <img loading="lazy" class="picto" src="/static/pictos/archivos.png">
+                Gestión de Archivos
+            </h3>
+            <p>Administra archivos y documentos del sistema.</p>
+            <div class="card-actions">
+                <a href="/admin/files" class="button">
+                    <img loading="lazy" class="picto-small" src="/static/pictos/archivos.png">
+                    Explorar Archivos
+                </a>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <h3>
+                <img loading="lazy" class="picto" src="/static/pictos/actividades.png">
+                Gestión de Actividades
+            </h3>
+            <p>Supervisa actividades globales y por centro.</p>
+            <div class="card-actions">
+                <a href="/admin/actividades-report" class="button">
+                    <img loading="lazy" class="picto-small" src="/static/pictos/buscar.png">
+                    Informe de Actividades
+                </a>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <h3>
+                <img loading="lazy" class="picto" src="/static/pictos/datacenter.png">
+                Configuración del Sistema
+            </h3>
+            <p>Configuraciones avanzadas y parámetros del sistema.</p>
+            <div class="card-actions">
+                <a href="/admin/configuracion" class="button">
+                    <img loading="lazy" class="picto-small" src="/static/pictos/escribir.png">
+                    Configurar Sistema
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="system-info">
+        <h2>Información del Sistema</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <strong>Versión:</strong>
+                <span>Figaro Go v2.0.0</span>
+            </div>
+            <div class="info-item">
+                <strong>Base de Datos:</strong>
+                <span>SQLite</span>
+            </div>
+            <div class="info-item">
+                <strong>Usuarios Activos:</strong>
+                <span id="active-users">Cargando...</span>
+            </div>
+            <div class="info-item">
+                <strong>Sesiones Activas:</strong>
+                <span id="active-sessions">Cargando...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.admin-card {
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+}
+
+.admin-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    border-color: #007cba;
+}
+
+.admin-card h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.admin-card p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.card-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.system-info {
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #007cba;
+}
+
+.info-item strong {
+    color: #333;
+    font-size: 14px;
+}
+
+.info-item span {
+    color: #666;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.picto-small {
+    width: 16px;
+    height: 16px;
+}
+
+@media (max-width: 768px) {
+    .admin-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .card-actions {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+// Simulate loading system info
+setTimeout(() => {
+    document.getElementById('active-users').textContent = '{{len .User.Permissions}}';
+    document.getElementById('active-sessions').textContent = '1'; // Current session
+}, 500);
+</script>
+{{end}}
