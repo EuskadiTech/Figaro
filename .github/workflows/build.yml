@@ -29,10 +29,11 @@ jobs:
             goarch: amd64
             name: figaro-windowscross-amd64.exe
             runner: ubuntu-latest
-          - goos: windows
-            goarch: amd64
-            name: figaro-windowsnative-amd64.exe
-            runner: windows-latest
+          # Disabled due to high time and resource consumption on Windows runners
+          # - goos: windows
+          #   goarch: amd64
+          #   name: figaro-windowsnative-amd64.exe
+          #   runner: windows-latest
           - goos: darwin
             goarch: amd64
             name: figaro-darwin-amd64
@@ -207,6 +208,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
+          pattern: figaro-*-*
 
       - name: Create checksums
         run: |
