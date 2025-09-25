@@ -44,7 +44,26 @@ go test ./...
 
 # Build the application
 echo "🔨 Building binary..."
-CGO_ENABLED=1 GOOS=${GOOS} GOARCH=${GOARCH} go build -ldflags="${LDFLAGS}" -o ${OUTPUT} ./cmd/figaro
+
+# Windows-specific CGO setup
+if [ "$GOOS" = "windows" ]; then
+    echo "🪟 Configuring Windows CGO build..."
+    export CC=gcc
+    export CGO_ENABLED=1
+    
+    # Check if GCC is available
+    if ! command -v gcc &> /dev/null; then
+        echo "❌ Error: GCC not found. Please install TDM-GCC or MinGW-w64:"
+        echo "   - Using Chocolatey: choco install mingw"
+        echo "   - Using winget: winget install mingw-w64" 
+        echo "   - Or download from: https://jmeubank.github.io/tdm-gcc/"
+        exit 1
+    fi
+    
+    CGO_ENABLED=1 CC=gcc GOOS=${GOOS} GOARCH=${GOARCH} go build -ldflags="${LDFLAGS}" -o ${OUTPUT} ./cmd/figaro
+else
+    CGO_ENABLED=1 GOOS=${GOOS} GOARCH=${GOARCH} go build -ldflags="${LDFLAGS}" -o ${OUTPUT} ./cmd/figaro
+fi
 
 echo "✅ Build completed successfully!"
 echo "   Binary: ${OUTPUT}"

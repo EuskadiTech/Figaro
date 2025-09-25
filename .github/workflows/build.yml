@@ -14,25 +14,31 @@ jobs:
   # Build Go binaries for multiple platforms
   build-binaries:
     name: Build Binaries
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
           - goos: linux
             goarch: amd64
             name: figaro-linux-amd64
+            runner: ubuntu-latest
           - goos: linux
             goarch: arm64
             name: figaro-linux-arm64
+            runner: ubuntu-latest
           - goos: windows
             goarch: amd64
             name: figaro-windows-amd64.exe
+            runner: windows-latest
           - goos: darwin
             goarch: amd64
             name: figaro-darwin-amd64
+            runner: ubuntu-latest
           - goos: darwin
             goarch: arm64
             name: figaro-darwin-arm64
+            runner: ubuntu-latest
+
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - name: Checkout code
@@ -56,11 +62,18 @@ jobs:
       - name: Install dependencies
         run: go mod download
 
+      - name: Setup Windows build environment
+        if: matrix.goos == 'windows' && matrix.runner == 'windows-latest'
+        run: |
+          # Ensure MinGW-w64 is available and in PATH for CGO
+          choco install mingw -y
+          refreshenv
+        shell: powershell
+
       - name: Build binary
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
-          CGO_ENABLED: 1
         run: |
           if [ "${{ matrix.goos }}" = "linux" ]; then
             # For Linux, we need to install cross-compilation tools
@@ -69,14 +82,38 @@ jobs:
               sudo apt-get install -y gcc-aarch64-linux-gnu
               export CC=aarch64-linux-gnu-gcc
             fi
+            export CGO_ENABLED=1
             go build -ldflags="-s -w -extldflags=-static" -o ${{ matrix.name }} ./cmd/figaro
           elif [ "${{ matrix.goos }}" = "windows" ]; then
-            # For Windows, disable CGO due to cross-compilation complexity
-            CGO_ENABLED=0 go build -ldflags="-s -w" -o ${{ matrix.name }} ./cmd/figaro
+            # Windows builds run on Windows runners with native toolchain
+            if [ "${{ matrix.runner }}" = "windows-latest" ]; then
+              # Native Windows build with CGO
+              export CGO_ENABLED=1
+              go build -ldflags="-s -w" -o ${{ matrix.name }} ./cmd/figaro
+            else
+              # Cross-compilation from Linux with MinGW-w64
+              sudo apt-get update
+              sudo apt-get install -y gcc-mingw-w64-x86-64
+              export CC=x86_64-w64-mingw32-gcc
+              export CGO_ENABLED=1
+              go build -ldflags="-s -w" -o ${{ matrix.name }} ./cmd/figaro
+            fi
+          elif [ "${{ matrix.goos }}" = "darwin" ]; then
+            # macOS builds - use native runner for better compatibility
+            if [ "${{ matrix.runner }}" = "macos-latest" ]; then
+              export CGO_ENABLED=1
+              go build -ldflags="-s -w" -o ${{ matrix.name }} ./cmd/figaro
+            else
+              # Cross-compilation - disable CGO
+              export CGO_ENABLED=0
+              go build -ldflags="-s -w" -o ${{ matrix.name }} ./cmd/figaro
+            fi
           else
-            # For macOS and others
-            CGO_ENABLED=0 go build -ldflags="-s -w" -o ${{ matrix.name }} ./cmd/figaro
+            # Default case
+            export CGO_ENABLED=0
+            go build -ldflags="-s -w" -o ${{ matrix.name }} ./cmd/figaro
           fi
+        shell: bash
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
