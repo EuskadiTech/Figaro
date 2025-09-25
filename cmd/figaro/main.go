@@ -38,11 +38,11 @@ func main() {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	// Load HTML templates
-	router.LoadHTMLGlob("internal/handlers/templates/*")
+	// Load HTML templates from embedded filesystem
+	tmpl := handlers.CreateHTMLTemplate()
 	
 	// Add template functions
-	router.SetFuncMap(template.FuncMap{
+	tmpl = tmpl.Funcs(template.FuncMap{
 		"call": func(fn interface{}, args ...interface{}) interface{} {
 			if f, ok := fn.(func(string) bool); ok && len(args) > 0 {
 				if arg, ok := args[0].(string); ok {
@@ -52,6 +52,9 @@ func main() {
 			return false
 		},
 	})
+	
+	// Set HTML template on router
+	router.SetHTMLTemplate(tmpl)
 
 	// Routes that don't require authentication
 	router.GET("/login", h.Login)
