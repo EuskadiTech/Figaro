@@ -29,17 +29,18 @@ $local_activities = get_activities_from_dir("$RUTA_DATOS/Actividades/$centro/$au
 $global_activities = get_activities_from_dir("$RUTA_DATOS/Actividades/_Global", true);
 $all_activities = array_merge($local_activities, $global_activities);
 
-// Create search index
-$search_index = [];
-foreach ($all_activities as $activity) {
-    $search_index[] = [
-        'id' => $activity['id'],
-        'title' => $activity['title'],
-        'description' => $activity['description'],
-        'start' => $activity['start'],
-        'end' => $activity['end'],
-        '_global' => $activity['_global']
-    ];
+// Process search query
+$search_query = trim($_GET['q'] ?? '');
+$show_past = ($_GET['past'] ?? '') === 'y';
+
+// Filter activities based on search query
+if (!empty($search_query)) {
+    $search_query_lower = strtolower($search_query);
+    $all_activities = array_filter($all_activities, function ($activity) use ($search_query_lower) {
+        $title_match = strpos(strtolower($activity['title'] ?? ''), $search_query_lower) !== false;
+        $description_match = strpos(strtolower($activity['description'] ?? ''), $search_query_lower) !== false;
+        return $title_match || $description_match;
+    });
 }
 
 // Filter for upcoming activities (default view)
@@ -66,8 +67,12 @@ usort($past_activities, function ($a, $b) {
     return strtotime($b['start']) - strtotime($a['start']); // Recent past activities first
 });
 
-// Combine all activities for complete list
-$all_activities_sorted = array_merge($upcoming_activities, $past_activities);
+// Determine which activities to display
+if ($show_past) {
+    $activities_to_display = array_merge($upcoming_activities, $past_activities);
+} else {
+    $activities_to_display = $upcoming_activities;
+}
 ?>
 
 <!-- Search Bar and Controls -->
@@ -77,34 +82,65 @@ $all_activities_sorted = array_merge($upcoming_activities, $past_activities);
             🔍 Buscar actividades:
         </label>
         <input type="text" name="q" id="activity-search" placeholder="Buscar por título o descripción..." 
+               value="<?php echo htmlspecialchars($search_query); ?>"
                style="width: 100%; padding: 8px; font-size: 16px; border: 2px solid #ccc; border-radius: 5px; box-sizing: border-box;">
     </div>
-    <div>
+    <div style="margin-bottom: 10px;">
         <label style="font-weight: bold;">
-            <input name="past" value="y" type="checkbox" id="include-previous" style="margin-right: 8px;">
+            <input name="past" value="y" type="checkbox" id="include-previous" 
+                   <?php echo $show_past ? 'checked' : ''; ?> style="margin-right: 8px;">
             Incluir actividades anteriores
         </label>
     </div>
-</div>
+    <div>
+        <button type="submit" class="button" style="margin-right: 10px;">
+            <img loading="lazy" class="picto" src="/static/pictos/buscar.png"><br>Buscar
+        </button>
+        <a href="index.php" class="button">
+            <img loading="lazy" class="picto" src="/static/pictos/limpiar.png"><br>Limpiar
+        </a>
+    </div>
+</form>
 
-<div id="upcoming-activities-section">
-<h2>Próximas Actividades</h2>
+<div id="activities-section">
+<?php if (!empty($search_query)): ?>
+    <h2>Resultados de búsqueda para: "<?php echo htmlspecialchars($search_query); ?>"</h2>
+<?php elseif ($show_past): ?>
+    <h2>Todas las actividades</h2>
+<?php else: ?>
+    <h2>Próximas actividades</h2>
+<?php endif; ?>
 
 <a href="crear_actividad.php" class="button" style="margin-bottom: 20px;">
     <img loading="lazy" class="picto" src="/static/pictos/mas.png"><br>
     Crear nueva actividad</a>
 <br>
 
-<div id="upcoming-activities-container">
-<?php if (empty($upcoming_activities)): ?>
-    <p>No hay próximas actividades.</p>
+<div id="activities-container">
+<?php if (empty($activities_to_display)): ?>
+    <?php if (!empty($search_query)): ?>
+        <p>No se encontraron actividades que coincidan con "<?php echo htmlspecialchars($search_query); ?>".</p>
+    <?php else: ?>
+        <p>No hay actividades<?php echo $show_past ? '' : ' próximas'; ?>.</p>
+    <?php endif; ?>
 <?php else: ?>
-    <?php foreach ($upcoming_activities as $activity): ?>
+    <?php foreach ($activities_to_display as $activity): ?>
         <div
             style="background-color: lightcyan; padding: 10px; margin-top: 5px; border-radius: 25px; border: 2px solid black; display: inline-block;">
             <h3>
                 <?php echo htmlspecialchars($activity['title']); ?>
             </h3>
+            
+            <?php 
+            // Check if activity is outside working hours
+            $is_off_hours = is_off_hours($activity['start'], $activity['end'], $centro);
+            if ($is_off_hours): ?>
+                <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 8px; border-radius: 5px; margin-bottom: 10px;">
+                    <img loading="lazy" class="picto" src="/static/pictos/advertencia.png">
+                    <strong>Aviso:</strong> Esta actividad está programada fuera del horario de atención del centro.
+                </div>
+            <?php endif; ?>
+            
             <?php if (isset($activity["is_shared_from"]) and $activity["is_shared_from"] != "") {?>
                 <p><img loading="lazy" class="picto" src="/static/pictos/compartir2.png">
                     <span style="font-weight: bold; vertical-align: top; display: inline-block;"> Compartido por: <br>
