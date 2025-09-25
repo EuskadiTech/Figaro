@@ -37,11 +37,11 @@ jobs:
           - goos: darwin
             goarch: amd64
             name: figaro-darwin-amd64
-            runner: ubuntu-latest
+            runner: macos-latest
           - goos: darwin
             goarch: arm64
             name: figaro-darwin-arm64
-            runner: ubuntu-latest
+            runner: macos-latest
 
     runs-on: ${{ matrix.runner }}
 
