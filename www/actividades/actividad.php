@@ -43,7 +43,7 @@ $activity['_global'] = $is_global;
 
 <div style="margin-bottom: 20px;">
     <a href="index.php" class="button">
-        <img loading="lazy" class="picto" src="/static/pictos/atras.png"><br>Volver a la lista
+        <img loading="lazy" class="picto" src="/static/pictos/salir.png"><br>Volver a la lista
     </a>
 </div>
 
