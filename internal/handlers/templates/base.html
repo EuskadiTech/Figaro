@@ -120,6 +120,12 @@
             {{template "profile-content" .}}
         {{else if eq .ContentTemplate "elegir_centro"}}
             {{template "elegir-centro-content" .}}
+        {{else if eq .ContentTemplate "materiales"}}
+            {{template "materiales-content" .}}
+        {{else if eq .ContentTemplate "actividades"}}
+            {{template "actividades-content" .}}
+        {{else if eq .ContentTemplate "admin"}}
+            {{template "admin-content" .}}
         {{else}}
             {{template "content" .}}
         {{end}}

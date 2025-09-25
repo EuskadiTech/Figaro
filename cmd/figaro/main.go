@@ -69,11 +69,14 @@ func main() {
 		authGroup.GET("/elegir_centro", h.ElegirCentro)
 		authGroup.POST("/elegir_centro", h.ElegirCentro)
 		
-		// TODO: Add other authenticated routes here
-		// authGroup.GET("/materiales", h.MaterialesIndex)
-		// authGroup.GET("/actividades", h.ActividadesIndex)
-		// authGroup.GET("/admin", h.AdminIndex)
-		// etc.
+		// Materials module
+		authGroup.GET("/materiales", h.MaterialesIndex)
+		
+		// Activities module
+		authGroup.GET("/actividades", h.ActividadesIndex)
+		
+		// Admin module
+		authGroup.GET("/admin", h.AdminIndex)
 	}
 
 	// Start server

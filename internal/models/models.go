@@ -70,6 +70,8 @@ type Activity struct {
 	StartDatetime  time.Time `json:"start" db:"start_datetime"`
 	EndDatetime    time.Time `json:"end" db:"end_datetime"`
 	IsGlobal       bool      `json:"_global" db:"is_global"` // Keep underscore prefix for compatibility
+	MeetingURL     *string   `json:"meeting_url" db:"meeting_url"`
+	WebURL         *string   `json:"web_url" db:"web_url"`
 	CreatedAt      time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at" db:"updated_at"`
 }
