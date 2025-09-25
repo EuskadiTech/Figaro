@@ -97,7 +97,7 @@ if ($show_past) {
             <img loading="lazy" class="picto" src="/static/pictos/buscar.png"><br>Buscar
         </button>
         <a href="index.php" class="button">
-            <img loading="lazy" class="picto" src="/static/pictos/limpiar.png"><br>Limpiar
+            <img loading="lazy" class="picto" src="/static/pictos/cancelar.png"><br>Cancelar busqueda
         </a>
     </div>
 </form>
