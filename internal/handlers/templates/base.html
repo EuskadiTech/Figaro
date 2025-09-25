@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <title>{{.PageTitle}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="/static/style.css" rel="stylesheet" />
+</head>
+<body id="top">
+    <script>
+        const showLoader = (message = "Solicitando...") => {
+            const loader = document.querySelector("#loader");
+            const loaderStat = document.querySelector("#loaderStat");
+            if (loader) loader.style.display = "block";
+            if (loaderStat) loaderStat.innerText = message;
+        };
+        
+        const hideLoader = (message = "Descargando...") => {
+            const loader = document.querySelector("#loader");
+            const loaderStat = document.querySelector("#loaderStat");
+            if (loader) loader.style.display = "none";
+            if (loaderStat) loaderStat.innerText = message;
+        };
+        
+        // Show "Solicitando..." if user reloads or leaves
+        window.addEventListener("beforeunload", () => {
+            showLoader("Solicitando...");
+        });
+        
+        // Handle readyState (initial load)
+        document.onreadystatechange = () => {
+            if (document.readyState !== "complete") {
+                showLoader("Descargando...");
+            } else {
+                hideLoader("Solicitando...");
+            }
+        };
+        
+        // Handle clicks on links and submits
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll("a:not([target='_blank']):not([download])")
+                .forEach(el => el.addEventListener("click", () => showLoader("Solicitando...")));
+            
+            document.querySelectorAll("form button[type='submit']")
+                .forEach(btn => btn.addEventListener("click", () => showLoader("Solicitando...")));
+        });
+        
+        // Handle back/forward navigation restores
+        window.addEventListener("pageshow", event => {
+            if (event.persisted) {
+                hideLoader("Descargando...");
+            }
+        });
+    </script>
+
+    <center id="loader">
+        <img loading="eager" src="/static/load.gif" width="200" height="200" />
+        <h4 style="margin: 0;" id="loaderStat">Descargando...</h4>
+        <progress style="width: calc(100% - 25px);"></progress>
+    </center>
+    
+    {{if .User}}
+        {{if and .Session.Centro .Session.Aula}}
+        <span style="font-family: monospace;">{{.Session.Centro}} -> {{.Session.Aula}}</span>
+        {{end}}
+        <div style="background: lightcyan; border: 2px solid black; border-radius: 7px; padding: 5px;">
+            <a class="button" href="/elegir_centro">
+                <img loading="lazy" class="picto" src="/static/pictos/centro.png"><br>
+                Elegir Centro
+            </a>
+            {{if call .HasAccess "materiales.index"}}
+                <a class="button" href="/materiales">
+                    <img loading="lazy" class="picto" src="/static/pictos/material_escolar.png"><br>
+                    Materiales
+                </a>
+            {{end}}
+            {{if call .HasAccess "actividades.index"}}
+                <a class="button" href="/actividades">
+                    <img loading="lazy" class="picto" src="/static/pictos/actividades.png"><br>
+                    Actividades
+                </a>
+            {{end}}
+            {{if call .HasAccess "archivos.index"}}
+                <a class="button" href="/archivos">
+                    <img loading="lazy" class="picto" src="/static/pictos/archivos.png"><br>
+                    Archivos
+                </a>
+            {{end}}
+            {{if call .HasAccess "ADMIN"}}
+                <a class="button" href="/admin">
+                    <img loading="lazy" class="picto" src="/static/pictos/datacenter.png"><br>
+                    Administración
+                </a>
+            {{end}}
+            <a class="button" href="/perfil">
+                <img loading="lazy" class="picto" src="/static/pictos/nombre.png"><br>
+                Perfil
+            </a>
+            <a class="button" href="/logout">
+                <img loading="lazy" class="picto" src="/static/pictos/candado.png"><br>
+                Cerrar Sesión
+            </a>
+        </div>
+    {{end}}
+    
+    <main id="container">
+        {{if eq .ContentTemplate "index"}}
+            {{if .Flash}}
+            <div style="background-color: #ffebee; border: 2px solid #f44336; color: #c62828; padding: 15px; margin: 20px 0; border-radius: 10px; text-align: center;">
+                <strong>⚠️ Acceso Denegado:</strong> {{.Flash}}
+            </div>
+            {{end}}
+
+            <center>
+                <h2>¡Hola {{.User.DisplayName}}!</h2>
+                <h1>Bienvenidx a Figaró</h1>
+                <em>Utiliza el menú superior para acceder a los modulos a los que tienes acceso</em>
+            </center>
+        {{else if eq .ContentTemplate "profile"}}
+            {{template "profile-content" .}}
+        {{else if eq .ContentTemplate "elegir_centro"}}
+            {{template "elegir-centro-content" .}}
+        {{else}}
+            {{template "content" .}}
+        {{end}}
+    </main>
+</body>
+</html>

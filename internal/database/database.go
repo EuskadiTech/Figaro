@@ -8,6 +8,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -61,16 +63,39 @@ func Initialize(dataDir string) error {
 func runMigrations(db *sql.DB) error {
 	log.Printf("Running database migrations...")
 
-	// Read migration file
-	migrationSQL, err := migrationFS.ReadFile("migrations/001_initial_schema.up.sql")
+	// Get all migration files
+	entries, err := migrationFS.ReadDir("migrations")
 	if err != nil {
-		return fmt.Errorf("failed to read migration file: %w", err)
+		return fmt.Errorf("failed to read migrations directory: %w", err)
 	}
 
-	// Execute migration SQL
-	_, err = db.Exec(string(migrationSQL))
-	if err != nil {
-		return fmt.Errorf("failed to execute migration: %w", err)
+	// Filter and sort .up.sql files
+	var migrationFiles []string
+	for _, entry := range entries {
+		if strings.HasSuffix(entry.Name(), ".up.sql") {
+			migrationFiles = append(migrationFiles, entry.Name())
+		}
+	}
+	
+	// Sort to ensure migrations run in order
+	sort.Strings(migrationFiles)
+
+	// Execute each migration
+	for _, filename := range migrationFiles {
+		log.Printf("Applying migration: %s", filename)
+		
+		migrationSQL, err := migrationFS.ReadFile("migrations/" + filename)
+		if err != nil {
+			return fmt.Errorf("failed to read migration file %s: %w", filename, err)
+		}
+
+		// Execute migration SQL
+		_, err = db.Exec(string(migrationSQL))
+		if err != nil {
+			return fmt.Errorf("failed to execute migration %s: %w", filename, err)
+		}
+		
+		log.Printf("Applied migration: %s", filename)
 	}
 
 	log.Printf("Database migrations completed successfully")

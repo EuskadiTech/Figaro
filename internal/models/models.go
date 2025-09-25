@@ -109,6 +109,20 @@ func (nt *NullTime) Scan(value interface{}) error {
 	return fmt.Errorf("cannot scan %T into NullTime", value)
 }
 
+// UserSession represents a user session with device information
+type UserSession struct {
+	ID          string    `json:"id" db:"id"`
+	UserID      int       `json:"user_id" db:"user_id"`
+	Token       string    `json:"token" db:"token"`
+	DeviceName  string    `json:"device_name" db:"device_name"`
+	IPAddress   string    `json:"ip_address" db:"ip_address"`
+	UserAgent   string    `json:"user_agent" db:"user_agent"`
+	CreatedAt   time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
+	ExpiresAt   time.Time `json:"expires_at" db:"expires_at"`
+	IsActive    bool      `json:"is_active" db:"is_active"`
+}
+
 // Value implements the driver.Valuer interface
 func (nt NullTime) Value() (driver.Value, error) {
 	if !nt.Valid {

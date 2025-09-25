@@ -64,6 +64,10 @@ func main() {
 	{
 		authGroup.GET("/", h.Index)
 		authGroup.GET("/logout", h.Logout)
+		authGroup.GET("/perfil", h.Profile)
+		authGroup.POST("/perfil", h.ProfilePost)
+		authGroup.GET("/elegir_centro", h.ElegirCentro)
+		authGroup.POST("/elegir_centro", h.ElegirCentro)
 		
 		// TODO: Add other authenticated routes here
 		// authGroup.GET("/materiales", h.MaterialesIndex)
