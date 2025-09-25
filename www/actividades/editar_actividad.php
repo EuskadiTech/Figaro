@@ -6,7 +6,7 @@ require_once "../_incl/pre-body.php";
 $id = $_GET['id'];
 $centro = $_SESSION['centro'];
 $aula = $_SESSION['aula'];
-$file_path = "$RUTA_DATOS/Actividades/$centro/$aula/$id.json";
+$file_path = "$RUTA_DATOS/Actividades/$centro/$id.json";
 
 if ($_GET['global'] == '1') {
     $file_path = "$RUTA_DATOS/Actividades/_Global/$id.json";
