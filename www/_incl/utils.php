@@ -203,3 +203,53 @@ function iso_to_es($iso_date) {
     // Invert array (YYYY-MM-DD to DD-MM-YYYY)
     return implode('/', array_reverse($parts));
 }
+
+function get_centro_config($centro_name) {
+    global $RUTA_DATOS;
+    $config_file = "$RUTA_DATOS/Centros/$centro_name/config.json";
+    if (file_exists($config_file)) {
+        return json_decode(file_get_contents($config_file), true);
+    }
+    return null;
+}
+
+function is_off_hours($activity_start, $activity_end, $centro_name) {
+    $config = get_centro_config($centro_name);
+    if (!$config || !isset($config['working_hours'])) {
+        return false; // No config, assume always open
+    }
+    
+    $start_datetime = new DateTime($activity_start);
+    $end_datetime = new DateTime($activity_end);
+    
+    // Get day of week (lowercase)
+    $day_name = strtolower($start_datetime->format('l'));
+    
+    // Check if the day is defined in working hours
+    if (!isset($config['working_hours'][$day_name]) || $config['working_hours'][$day_name] === null) {
+        return true; // Day is closed
+    }
+    
+    $working_hours = $config['working_hours'][$day_name];
+    $work_start = $working_hours['start'];
+    $work_end = $working_hours['end'];
+    
+    // Convert times to comparable format
+    $activity_start_time = $start_datetime->format('H:i');
+    $activity_end_time = $end_datetime->format('H:i');
+    
+    // Check if activity is outside working hours
+    if ($activity_start_time < $work_start || $activity_end_time > $work_end) {
+        return true;
+    }
+    
+    // If activity spans multiple days, check the end day too
+    if ($start_datetime->format('Y-m-d') !== $end_datetime->format('Y-m-d')) {
+        $end_day_name = strtolower($end_datetime->format('l'));
+        if (!isset($config['working_hours'][$end_day_name]) || $config['working_hours'][$end_day_name] === null) {
+            return true; // End day is closed
+        }
+    }
+    
+    return false;
+}
