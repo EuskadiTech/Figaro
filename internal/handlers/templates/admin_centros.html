@@ -1,0 +1,176 @@
+{{define "content"}}
+<div class="admin-centros-container">
+    <h1>Gestión de Centros</h1>
+    
+    <div class="action-buttons">
+        <a href="/admin/centros/crear" class="button azul">
+            <img loading="lazy" class="picto" src="/static/pictos/añadir.png"><br>
+            Crear Centro
+        </a>
+        <a href="/admin" class="button">
+            <img loading="lazy" class="picto" src="/static/pictos/admin.png"><br>
+            Volver al Panel
+        </a>
+    </div>
+
+    <div class="centers-list">
+        {{if .Centers}}
+        <table class="centers-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Zona Horaria</th>
+                    <th>Creado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Centers}}
+                <tr>
+                    <td>{{.ID}}</td>
+                    <td>
+                        <strong>{{.Name}}</strong>
+                        <div class="center-info">
+                            <img loading="lazy" class="picto-small" src="/static/pictos/centro.png">
+                            Centro Educativo
+                        </div>
+                    </td>
+                    <td>{{.Timezone}}</td>
+                    <td>{{.CreatedAt.Format "02/01/2006"}}</td>
+                    <td class="actions">
+                        <a href="/admin/centros/editar/{{.ID}}" class="button small">
+                            <img loading="lazy" class="picto-small" src="/static/pictos/escribir.png">
+                            Editar
+                        </a>
+                        <a href="/admin/centros/aulas/{{.ID}}" class="button small azul">
+                            <img loading="lazy" class="picto-small" src="/static/pictos/aula.png">
+                            Aulas
+                        </a>
+                        <button class="button small rojo" 
+                                onclick="return confirm('¿Estás seguro de que quieres eliminar este centro?')">
+                            <img loading="lazy" class="picto-small" src="/static/pictos/borrar.png">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        {{else}}
+        <div class="empty-state">
+            <img src="/static/pictos/centro.png" alt="Sin centros" width="64" height="64">
+            <h3>No hay centros registrados</h3>
+            <p>Comienza creando el primer centro educativo.</p>
+            <a href="/admin/centros/crear" class="button azul">
+                <img loading="lazy" class="picto" src="/static/pictos/añadir.png"><br>
+                Crear Primer Centro
+            </a>
+        </div>
+        {{end}}
+    </div>
+</div>
+
+<style>
+.admin-centros-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.action-buttons {
+    margin: 20px 0;
+    display: flex;
+    gap: 10px;
+}
+
+.centers-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.centers-table th,
+.centers-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.centers-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    color: #495057;
+}
+
+.centers-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.center-info {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.actions {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.empty-state img {
+    opacity: 0.5;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    color: #6c757d;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: #6c757d;
+    margin-bottom: 30px;
+}
+
+@media (max-width: 768px) {
+    .admin-centros-container {
+        margin: 10px;
+        padding: 10px;
+    }
+    
+    .centers-table {
+        font-size: 12px;
+    }
+    
+    .centers-table th,
+    .centers-table td {
+        padding: 8px 6px;
+    }
+    
+    .actions {
+        flex-direction: column;
+        gap: 2px;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+}
+</style>
+{{end}}

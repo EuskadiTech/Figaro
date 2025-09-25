@@ -1,4 +1,4 @@
-{{define "actividades-content"}}
+{{define "content"}}
 <div class="actividades-container">
     <h1>Actividades - {{.Centro}}</h1>
     
@@ -91,11 +91,13 @@
                     </a>
                     {{end}}
                     {{if call $.HasAccess "actividades.delete"}}
-                    <a href="/actividades/eliminar/{{.ID}}" class="button small rojo"
-                       onclick="return confirm('¿Estás seguro de que quieres eliminar esta actividad?')">
-                        <img loading="lazy" class="picto-small" src="/static/pictos/borrar.png">
-                        Eliminar
-                    </a>
+                    <form method="POST" action="/actividades/eliminar/{{.ID}}" style="display: inline;">
+                        <button type="submit" class="button small rojo"
+                                onclick="return confirm('¿Estás seguro de que quieres eliminar esta actividad?')">
+                            <img loading="lazy" class="picto-small" src="/static/pictos/borrar.png">
+                            Eliminar
+                        </button>
+                    </form>
                     {{end}}
                 </div>
             </div>
@@ -271,4 +273,5 @@
     }
 }
 </style>
+</div>
 {{end}}

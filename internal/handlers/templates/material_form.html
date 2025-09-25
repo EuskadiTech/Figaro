@@ -1,0 +1,156 @@
+{{define "content"}}
+<div class="material-form-container">
+    <h1>{{if eq .Action "crear"}}Crear Nuevo Material{{else}}Editar Material{{end}} - {{.Centro}}</h1>
+    
+    <div class="form-card">
+        {{if .ErrorMessage}}
+        <div class="alert alert-danger">
+            {{.ErrorMessage}}
+        </div>
+        {{end}}
+
+        <form method="POST" class="material-form">
+            <div class="form-group">
+                <label for="nombre">Nombre del Material *</label>
+                <input type="text" 
+                       id="nombre" 
+                       name="nombre" 
+                       value="{{if .Material}}{{.Material.Name}}{{else if .FormData}}{{.FormData.nombre}}{{end}}" 
+                       required 
+                       placeholder="Ej: Lápiz 2B">
+            </div>
+
+            <div class="form-group">
+                <label for="unidad">Unidad *</label>
+                <input type="text" 
+                       id="unidad" 
+                       name="unidad" 
+                       value="{{if .Material}}{{.Material.Unit}}{{else if .FormData}}{{.FormData.unidad}}{{end}}" 
+                       required 
+                       placeholder="Ej: unidad, caja, metro">
+            </div>
+
+            <div class="form-group">
+                <label for="cantidad_disponible">Cantidad Disponible</label>
+                <input type="number" 
+                       id="cantidad_disponible" 
+                       name="cantidad_disponible" 
+                       value="{{if .Material}}{{.Material.AvailableQuantity}}{{else if .FormData}}{{.FormData.cantidad_disponible}}{{end}}" 
+                       min="0" 
+                       placeholder="0">
+            </div>
+
+            <div class="form-group">
+                <label for="cantidad_minima">Cantidad Mínima</label>
+                <input type="number" 
+                       id="cantidad_minima" 
+                       name="cantidad_minima" 
+                       value="{{if .Material}}{{.Material.MinimumQuantity}}{{else if .FormData}}{{.FormData.cantidad_minima}}{{end}}" 
+                       min="0" 
+                       placeholder="0">
+            </div>
+
+            <div class="form-group">
+                <label for="notas">Notas</label>
+                <textarea id="notas" 
+                          name="notas" 
+                          rows="4" 
+                          placeholder="Notas adicionales sobre el material">{{if .Material}}{{.Material.Notes}}{{else if .FormData}}{{.FormData.notas}}{{end}}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="button azul">
+                    <img loading="lazy" class="picto-small" src="/static/pictos/escribir.png">
+                    {{if eq .Action "crear"}}Crear Material{{else}}Guardar Cambios{{end}}
+                </button>
+                <a href="/materiales" class="button">
+                    <img loading="lazy" class="picto-small" src="/static/pictos/cancelar.png">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.material-form-container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.form-card {
+    background: white;
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.material-form .form-group {
+    margin-bottom: 20px;
+}
+
+.material-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+.material-form input,
+.material-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.material-form input:focus,
+.material-form textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0,123,255,0.3);
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+@media (max-width: 768px) {
+    .material-form-container {
+        margin: 10px;
+        padding: 10px;
+    }
+    
+    .form-card {
+        padding: 20px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .button {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+}
+</style>
+{{end}}

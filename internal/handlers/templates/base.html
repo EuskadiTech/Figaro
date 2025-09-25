@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <title>{{.PageTitle}}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="/static/bootstrap.min.css" rel="stylesheet" />
     <link href="/static/style.css" rel="stylesheet" />
 </head>
 <body id="top">
@@ -61,74 +62,65 @@
     
     {{if .User}}
         {{if and .Session.Centro .Session.Aula}}
-        <span style="font-family: monospace;">{{.Session.Centro}} -> {{.Session.Aula}}</span>
-        {{end}}
-        <div style="background: lightcyan; border: 2px solid black; border-radius: 7px; padding: 5px;">
-            <a class="button" href="/elegir_centro">
-                <img loading="lazy" class="picto" src="/static/pictos/centro.png"><br>
-                Elegir Centro
-            </a>
-            {{if call .HasAccess "materiales.index"}}
-                <a class="button" href="/materiales">
-                    <img loading="lazy" class="picto" src="/static/pictos/material_escolar.png"><br>
-                    Materiales
-                </a>
-            {{end}}
-            {{if call .HasAccess "actividades.index"}}
-                <a class="button" href="/actividades">
-                    <img loading="lazy" class="picto" src="/static/pictos/actividades.png"><br>
-                    Actividades
-                </a>
-            {{end}}
-            {{if call .HasAccess "archivos.index"}}
-                <a class="button" href="/archivos">
-                    <img loading="lazy" class="picto" src="/static/pictos/archivos.png"><br>
-                    Archivos
-                </a>
-            {{end}}
-            {{if call .HasAccess "ADMIN"}}
-                <a class="button" href="/admin">
-                    <img loading="lazy" class="picto" src="/static/pictos/datacenter.png"><br>
-                    Administración
-                </a>
-            {{end}}
-            <a class="button" href="/perfil">
-                <img loading="lazy" class="picto" src="/static/pictos/nombre.png"><br>
-                Perfil
-            </a>
-            <a class="button" href="/logout">
-                <img loading="lazy" class="picto" src="/static/pictos/candado.png"><br>
-                Cerrar Sesión
-            </a>
+        <div class="bg-light p-2 text-center border-bottom">
+            <small class="text-muted">{{.Session.Centro}} → {{.Session.Aula}}</small>
         </div>
+        {{end}}
+        <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/">Figaró</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <div class="navbar-nav me-auto">
+                        <a class="nav-link" href="/elegir_centro">
+                            <img loading="lazy" class="picto me-1" src="/static/pictos/centro.png" style="width: 16px; height: 16px;">
+                            Elegir Centro
+                        </a>
+                        {{if call .HasAccess "materiales.index"}}
+                        <a class="nav-link" href="/materiales">
+                            <img loading="lazy" class="picto me-1" src="/static/pictos/material_escolar.png" style="width: 16px; height: 16px;">
+                            Materiales
+                        </a>
+                        {{end}}
+                        {{if call .HasAccess "actividades.index"}}
+                        <a class="nav-link" href="/actividades">
+                            <img loading="lazy" class="picto me-1" src="/static/pictos/actividades.png" style="width: 16px; height: 16px;">
+                            Actividades
+                        </a>
+                        {{end}}
+                        {{if call .HasAccess "archivos.index"}}
+                        <a class="nav-link" href="/archivos">
+                            <img loading="lazy" class="picto me-1" src="/static/pictos/archivos.png" style="width: 16px; height: 16px;">
+                            Archivos
+                        </a>
+                        {{end}}
+                        {{if call .HasAccess "ADMIN"}}
+                        <a class="nav-link" href="/admin">
+                            <img loading="lazy" class="picto me-1" src="/static/pictos/datacenter.png" style="width: 16px; height: 16px;">
+                            Administración
+                        </a>
+                        {{end}}
+                    </div>
+                    <div class="navbar-nav">
+                        <a class="nav-link" href="/perfil">
+                            <img loading="lazy" class="picto me-1" src="/static/pictos/nombre.png" style="width: 16px; height: 16px;">
+                            Perfil
+                        </a>
+                        <a class="nav-link" href="/logout">
+                            <img loading="lazy" class="picto me-1" src="/static/pictos/candado.png" style="width: 16px; height: 16px;">
+                            Cerrar Sesión
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
     {{end}}
     
-    <main id="container">
-        {{if eq .ContentTemplate "index"}}
-            {{if .Flash}}
-            <div style="background-color: #ffebee; border: 2px solid #f44336; color: #c62828; padding: 15px; margin: 20px 0; border-radius: 10px; text-align: center;">
-                <strong>⚠️ Acceso Denegado:</strong> {{.Flash}}
-            </div>
-            {{end}}
-
-            <center>
-                <h2>¡Hola {{.User.DisplayName}}!</h2>
-                <h1>Bienvenidx a Figaró</h1>
-                <em>Utiliza el menú superior para acceder a los modulos a los que tienes acceso</em>
-            </center>
-        {{else if eq .ContentTemplate "profile"}}
-            {{template "profile-content" .}}
-        {{else if eq .ContentTemplate "elegir_centro"}}
-            {{template "elegir-centro-content" .}}
-        {{else if eq .ContentTemplate "materiales"}}
-            {{template "materiales-content" .}}
-        {{else if eq .ContentTemplate "actividades"}}
-            {{template "actividades-content" .}}
-        {{else if eq .ContentTemplate "admin"}}
-            {{template "admin-content" .}}
-        {{else}}
-            {{template "content" .}}
-        {{end}}
+    <main id="container" class="container-fluid py-3">
+        {{template "content" .}}
     </main>
+    <script src="/static/bootstrap.bundle.min.js"></script>
 </body>
 </html>

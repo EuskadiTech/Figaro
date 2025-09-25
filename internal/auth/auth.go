@@ -38,11 +38,11 @@ func GetUser(username string) (*models.User, error) {
 	user := &models.User{}
 	query := `SELECT id, username, password_hash, display_name, email, created_at, updated_at 
 			  FROM users WHERE username = ?`
-	
+
 	err := database.DB.QueryRow(query, username).Scan(
-		&user.ID, &user.Username, &user.PasswordHash, 
+		&user.ID, &user.Username, &user.PasswordHash,
 		&user.DisplayName, &user.Email, &user.CreatedAt, &user.UpdatedAt)
-	
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrUserNotFound
@@ -66,11 +66,11 @@ func GetUserByID(userID int) (*models.User, error) {
 	user := &models.User{}
 	query := `SELECT id, username, password_hash, display_name, email, created_at, updated_at 
 			  FROM users WHERE id = ?`
-	
+
 	err := database.DB.QueryRow(query, userID).Scan(
-		&user.ID, &user.Username, &user.PasswordHash, 
+		&user.ID, &user.Username, &user.PasswordHash,
 		&user.DisplayName, &user.Email, &user.CreatedAt, &user.UpdatedAt)
-	
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrUserNotFound
@@ -108,6 +108,15 @@ func GetUserPermissions(userID int) ([]string, error) {
 	}
 
 	return permissions, nil
+}
+
+// HashPassword hashes a password using bcrypt
+func HashPassword(password string) (string, error) {
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedBytes), nil
 }
 
 // VerifyPassword checks if the provided password matches the user's password hash
@@ -203,10 +212,10 @@ func CreateUserSession(userID int, deviceName, ipAddress, userAgent string) (*mo
 
 	query := `INSERT INTO user_sessions (id, user_id, token, device_name, ip_address, user_agent, created_at, updated_at, expires_at, is_active)
 			  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-	
+
 	_, err = database.DB.Exec(query, session.ID, session.UserID, session.Token, session.DeviceName,
 		session.IPAddress, session.UserAgent, session.CreatedAt, session.UpdatedAt, session.ExpiresAt, session.IsActive)
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -219,12 +228,12 @@ func GetSessionByToken(token string) (*models.UserSession, error) {
 	session := &models.UserSession{}
 	query := `SELECT id, user_id, token, device_name, ip_address, user_agent, created_at, updated_at, expires_at, is_active 
 			  FROM user_sessions WHERE token = ? AND is_active = 1 AND expires_at > datetime('now')`
-	
+
 	err := database.DB.QueryRow(query, token).Scan(
 		&session.ID, &session.UserID, &session.Token, &session.DeviceName,
 		&session.IPAddress, &session.UserAgent, &session.CreatedAt, &session.UpdatedAt,
 		&session.ExpiresAt, &session.IsActive)
-	
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("session not found or expired")
@@ -239,7 +248,7 @@ func GetSessionByToken(token string) (*models.UserSession, error) {
 func GetUserSessions(userID int) ([]models.UserSession, error) {
 	query := `SELECT id, user_id, token, device_name, ip_address, user_agent, created_at, updated_at, expires_at, is_active 
 			  FROM user_sessions WHERE user_id = ? AND is_active = 1 AND expires_at > datetime('now') ORDER BY updated_at DESC`
-	
+
 	rows, err := database.DB.Query(query, userID)
 	if err != nil {
 		return nil, err
@@ -301,7 +310,7 @@ func SetUserSession(c *gin.Context, user *models.User, password, deviceName stri
 	c.SetCookie("session_token", session.Token, int(24*time.Hour*30/time.Second), "/", "", false, true) // HttpOnly for security
 	c.SetCookie("username", user.Username, int(24*time.Hour*30/time.Second), "/", "", false, false)
 	c.SetCookie("loggedin", "yes", int(24*time.Hour*30/time.Second), "/", "", false, false)
-	
+
 	return session, nil
 }
 

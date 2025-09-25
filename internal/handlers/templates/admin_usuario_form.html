@@ -1,0 +1,423 @@
+{{define "content"}}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="bi bi-person-plus me-2"></i>
+                        {{if eq .Action "crear"}}Crear Nuevo Usuario{{else}}Editar Usuario{{end}}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {{if .ErrorMessage}}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {{.ErrorMessage}}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {{end}}
+
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="username" class="form-label">Nombre de Usuario <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="username" 
+                                           name="username" 
+                                           value="{{if .EditUser}}{{.EditUser.Username}}{{else if .FormData}}{{.FormData.username}}{{end}}" 
+                                           required 
+                                           placeholder="nombre.usuario">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="display_name" class="form-label">Nombre para Mostrar <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="display_name" 
+                                           name="display_name" 
+                                           value="{{if .EditUser}}{{.EditUser.DisplayName}}{{else if .FormData}}{{.FormData.display_name}}{{end}}" 
+                                           required 
+                                           placeholder="Juan Pérez">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <input type="email" 
+                                       class="form-control" 
+                                       id="email" 
+                                       name="email" 
+                                       value="{{if .EditUser}}{{.EditUser.Email}}{{else if .FormData}}{{.FormData.email}}{{end}}" 
+                                       required 
+                                       placeholder="usuario@ejemplo.com">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="password" class="form-label">
+                                Contraseña {{if eq .Action "crear"}}<span class="text-danger">*</span>{{else}}<small class="text-muted">(dejar en blanco para mantener actual)</small>{{end}}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="password" 
+                                       name="password" 
+                                       {{if eq .Action "crear"}}required{{end}} 
+                                       placeholder="{{if eq .Action "crear"}}Contraseña segura{{else}}Nueva contraseña (opcional){{end}}">
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Permisos del Usuario</label>
+                            
+                            <!-- Admin Permission (Global) -->
+                            <div class="card border-primary mb-3">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0"><i class="bi bi-shield-check me-2"></i>Administración del Sistema</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               name="permissions" 
+                                               value="ADMIN" 
+                                               id="perm-admin"
+                                               {{if .UserPermissions}}{{if contains .UserPermissions "ADMIN"}}checked{{end}}{{end}}>
+                                        <label class="form-check-label" for="perm-admin">
+                                            <strong>Administrador</strong>
+                                            <small class="d-block text-muted">Acceso completo a todas las funciones del sistema</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Materials Module -->
+                            <div class="card border-success mb-3">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="bi bi-box me-2"></i>Módulo de Materiales</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input module-perm" 
+                                                       type="checkbox" 
+                                                       name="permissions" 
+                                                       value="materiales.read" 
+                                                       id="perm-mat-read"
+                                                       data-module="materiales"
+                                                       {{if .UserPermissions}}{{if contains .UserPermissions "materiales.read"}}checked{{end}}{{end}}>
+                                                <label class="form-check-label" for="perm-mat-read">
+                                                    <i class="bi bi-eye text-info me-1"></i>
+                                                    <strong>Leer</strong>
+                                                    <small class="d-block text-muted">Ver inventario de materiales</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input module-perm" 
+                                                       type="checkbox" 
+                                                       name="permissions" 
+                                                       value="materiales.create" 
+                                                       id="perm-mat-create"
+                                                       data-module="materiales"
+                                                       {{if .UserPermissions}}{{if contains .UserPermissions "materiales.create"}}checked{{end}}{{end}}>
+                                                <label class="form-check-label" for="perm-mat-create">
+                                                    <i class="bi bi-plus-circle text-success me-1"></i>
+                                                    <strong>Crear</strong>
+                                                    <small class="d-block text-muted">Añadir nuevos materiales</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input module-perm" 
+                                                       type="checkbox" 
+                                                       name="permissions" 
+                                                       value="materiales.update" 
+                                                       id="perm-mat-update"
+                                                       data-module="materiales"
+                                                       {{if .UserPermissions}}{{if contains .UserPermissions "materiales.update"}}checked{{end}}{{end}}>
+                                                <label class="form-check-label" for="perm-mat-update">
+                                                    <i class="bi bi-pencil text-warning me-1"></i>
+                                                    <strong>Actualizar</strong>
+                                                    <small class="d-block text-muted">Modificar materiales existentes</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input module-perm" 
+                                                       type="checkbox" 
+                                                       name="permissions" 
+                                                       value="materiales.delete" 
+                                                       id="perm-mat-delete"
+                                                       data-module="materiales"
+                                                       {{if .UserPermissions}}{{if contains .UserPermissions "materiales.delete"}}checked{{end}}{{end}}>
+                                                <label class="form-check-label" for="perm-mat-delete">
+                                                    <i class="bi bi-trash text-danger me-1"></i>
+                                                    <strong>Eliminar</strong>
+                                                    <small class="d-block text-muted">Eliminar materiales del inventario</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-sm btn-outline-success module-select-all" data-module="materiales">
+                                            <i class="bi bi-check-all me-1"></i>Seleccionar Todos
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary module-clear-all" data-module="materiales">
+                                            <i class="bi bi-x-circle me-1"></i>Limpiar Todos
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Activities Module -->
+                            <div class="card border-info mb-3">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Módulo de Actividades</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input module-perm" 
+                                                       type="checkbox" 
+                                                       name="permissions" 
+                                                       value="actividades.read" 
+                                                       id="perm-act-read"
+                                                       data-module="actividades"
+                                                       {{if .UserPermissions}}{{if contains .UserPermissions "actividades.read"}}checked{{end}}{{end}}>
+                                                <label class="form-check-label" for="perm-act-read">
+                                                    <i class="bi bi-eye text-info me-1"></i>
+                                                    <strong>Leer</strong>
+                                                    <small class="d-block text-muted">Ver calendario de actividades</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input module-perm" 
+                                                       type="checkbox" 
+                                                       name="permissions" 
+                                                       value="actividades.create" 
+                                                       id="perm-act-create"
+                                                       data-module="actividades"
+                                                       {{if .UserPermissions}}{{if contains .UserPermissions "actividades.create"}}checked{{end}}{{end}}>
+                                                <label class="form-check-label" for="perm-act-create">
+                                                    <i class="bi bi-calendar-plus text-success me-1"></i>
+                                                    <strong>Crear</strong>
+                                                    <small class="d-block text-muted">Programar nuevas actividades</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input module-perm" 
+                                                       type="checkbox" 
+                                                       name="permissions" 
+                                                       value="actividades.update" 
+                                                       id="perm-act-update"
+                                                       data-module="actividades"
+                                                       {{if .UserPermissions}}{{if contains .UserPermissions "actividades.update"}}checked{{end}}{{end}}>
+                                                <label class="form-check-label" for="perm-act-update">
+                                                    <i class="bi bi-pencil-square text-warning me-1"></i>
+                                                    <strong>Actualizar</strong>
+                                                    <small class="d-block text-muted">Modificar actividades existentes</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input module-perm" 
+                                                       type="checkbox" 
+                                                       name="permissions" 
+                                                       value="actividades.delete" 
+                                                       id="perm-act-delete"
+                                                       data-module="actividades"
+                                                       {{if .UserPermissions}}{{if contains .UserPermissions "actividades.delete"}}checked{{end}}{{end}}>
+                                                <label class="form-check-label" for="perm-act-delete">
+                                                    <i class="bi bi-calendar-x text-danger me-1"></i>
+                                                    <strong>Eliminar</strong>
+                                                    <small class="d-block text-muted">Cancelar o eliminar actividades</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-sm btn-outline-info module-select-all" data-module="actividades">
+                                            <i class="bi bi-check-all me-1"></i>Seleccionar Todos
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary module-clear-all" data-module="actividades">
+                                            <i class="bi bi-x-circle me-1"></i>Limpiar Todos
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-light">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="/admin/usuarios" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-1"></i>
+                                    Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg me-1"></i>
+                                    {{if eq .Action "crear"}}Crear Usuario{{else}}Guardar Cambios{{end}}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Toggle password visibility
+document.getElementById('togglePassword').addEventListener('click', function() {
+    const password = document.getElementById('password');
+    const icon = this.querySelector('i');
+    
+    if (password.type === 'password') {
+        password.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+    } else {
+        password.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+    }
+});
+
+// Admin permission toggle - if admin is checked, check all others
+document.getElementById('perm-admin').addEventListener('change', function() {
+    const allModulePerms = document.querySelectorAll('.module-perm');
+    allModulePerms.forEach(perm => {
+        if (this.checked) {
+            perm.checked = true;
+            perm.closest('.card').classList.add('border-success', 'bg-light');
+        } else {
+            perm.closest('.card').classList.remove('border-success', 'bg-light');
+        }
+    });
+    updateModuleHighlighting();
+});
+
+// Module select all buttons
+document.querySelectorAll('.module-select-all').forEach(button => {
+    button.addEventListener('click', function() {
+        const module = this.dataset.module;
+        const modulePerms = document.querySelectorAll(`[data-module="${module}"]`);
+        modulePerms.forEach(perm => {
+            perm.checked = true;
+        });
+        updateModuleHighlighting();
+    });
+});
+
+// Module clear all buttons
+document.querySelectorAll('.module-clear-all').forEach(button => {
+    button.addEventListener('click', function() {
+        const module = this.dataset.module;
+        const modulePerms = document.querySelectorAll(`[data-module="${module}"]`);
+        modulePerms.forEach(perm => {
+            perm.checked = false;
+        });
+        updateModuleHighlighting();
+    });
+});
+
+// Individual permission change handling
+document.querySelectorAll('.module-perm').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        updateModuleHighlighting();
+    });
+});
+
+// Update module card highlighting based on selected permissions
+function updateModuleHighlighting() {
+    // Materials module
+    const materialsPerms = document.querySelectorAll('[data-module="materiales"]');
+    const materialsCard = document.querySelector('.card.border-success');
+    const materialsChecked = Array.from(materialsPerms).filter(p => p.checked).length;
+    
+    if (materialesChecked > 0) {
+        materialsCard.classList.add('bg-light');
+        materialsCard.querySelector('.card-header').classList.remove('bg-success');
+        materialsCard.querySelector('.card-header').classList.add('bg-success');
+    } else {
+        materialsCard.classList.remove('bg-light');
+    }
+    
+    // Activities module
+    const activitiesPerms = document.querySelectorAll('[data-module="actividades"]');
+    const activitiesCard = document.querySelector('.card.border-info');
+    const activitiesChecked = Array.from(activitiesPerms).filter(p => p.checked).length;
+    
+    if (activitiesChecked > 0) {
+        activitiesCard.classList.add('bg-light');
+        activitiesCard.querySelector('.card-header').classList.remove('bg-info');
+        activitiesCard.querySelector('.card-header').classList.add('bg-info');
+    } else {
+        activitiesCard.classList.remove('bg-light');
+    }
+    
+    // Update admin checkbox if all permissions are selected
+    const allModulePerms = document.querySelectorAll('.module-perm');
+    const allChecked = Array.from(allModulePerms).every(p => p.checked);
+    const adminCheckbox = document.getElementById('perm-admin');
+    
+    if (allChecked && allModulePerms.length > 0) {
+        adminCheckbox.checked = true;
+    }
+}
+
+// Initialize highlighting on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateModuleHighlighting();
+});
+
+// Dependency logic: Create/Update/Delete require Read permission
+document.querySelectorAll('.module-perm').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        const module = this.dataset.module;
+        const permission = this.value.split('.')[1]; // get 'read', 'create', etc.
+        
+        if (permission !== 'read' && this.checked) {
+            // If checking create/update/delete, automatically check read
+            const readPerm = document.querySelector(`[value="${module}.read"]`);
+            if (readPerm) {
+                readPerm.checked = true;
+            }
+        } else if (permission === 'read' && !this.checked) {
+            // If unchecking read, automatically uncheck all others for this module
+            const modulePerms = document.querySelectorAll(`[data-module="${module}"]:not([value="${module}.read"])`);
+            modulePerms.forEach(perm => {
+                perm.checked = false;
+            });
+        }
+        
+        updateModuleHighlighting();
+    });
+});
+</script>
+{{end}}
