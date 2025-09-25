@@ -198,7 +198,7 @@ jobs:
   release:
     name: Create Release
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [build-binaries, build-docker]
+    needs: build-binaries # Do not wait for Docker build
     runs-on: ubuntu-latest
     permissions:
       contents: write
