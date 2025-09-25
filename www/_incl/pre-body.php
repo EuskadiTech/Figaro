@@ -19,7 +19,6 @@ if (isset($SKIP_AUTH) && $SKIP_AUTH === true) {
   <title>Figaró</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="/static/style.css" rel="stylesheet" />
-  <link rel="icon" href="/static/logo.svg" sizes="any" type="image/svg+xml" />
 </head>
 
 <body id="top">
