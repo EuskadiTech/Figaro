@@ -7,6 +7,7 @@ import (
 	"github.com/EuskadiTech/Figaro/internal/auth"
 	"github.com/EuskadiTech/Figaro/internal/database"
 	"github.com/EuskadiTech/Figaro/internal/models"
+	"github.com/EuskadiTech/Figaro/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -32,8 +33,15 @@ func (h *Handlers) Login(c *gin.Context) {
 
 // handleLoginPost processes login form submission
 func (h *Handlers) handleLoginPost(c *gin.Context) {
+	clientIP := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+	
 	var creds auth.LoginCredentials
 	if err := c.ShouldBind(&creds); err != nil {
+		logger.WarnWithContext("auth", "", clientIP, "Invalid login form data", gin.H{
+			"error": err.Error(),
+			"user_agent": userAgent,
+		})
 		h.renderTemplate(c, "login.html", gin.H{
 			"ErrorMessage": "Datos de formulario inválidos",
 		})
@@ -42,11 +50,18 @@ func (h *Handlers) handleLoginPost(c *gin.Context) {
 
 	var user *models.User
 	var err error
+	var loginMethod string
 
 	if creds.QRData != "" {
 		// QR login
+		loginMethod = "QR"
 		user, err = auth.LoginWithQR(creds.QRData)
 		if err != nil {
+			logger.WarnWithContext("auth", "", clientIP, "Failed QR login attempt", gin.H{
+				"method": "QR",
+				"error": err.Error(),
+				"user_agent": userAgent,
+			})
 			h.renderTemplate(c, "login.html", gin.H{
 				"ErrorMessage": "Código QR inválido o caducado",
 			})
@@ -54,14 +69,24 @@ func (h *Handlers) handleLoginPost(c *gin.Context) {
 		}
 	} else if creds.Username != "" && creds.Password != "" {
 		// Username/password login
+		loginMethod = "password"
 		user, err = auth.Login(creds.Username, creds.Password)
 		if err != nil {
+			logger.WarnWithContext("auth", "", clientIP, fmt.Sprintf("Failed login attempt for user: %s", creds.Username), gin.H{
+				"username": creds.Username,
+				"method": "password",
+				"error": err.Error(),
+				"user_agent": userAgent,
+			})
 			h.renderTemplate(c, "login.html", gin.H{
 				"ErrorMessage": "Usuario o contraseña incorrectos",
 			})
 			return
 		}
 	} else {
+		logger.WarnWithContext("auth", "", clientIP, "Login attempt with missing credentials", gin.H{
+			"user_agent": userAgent,
+		})
 		h.renderTemplate(c, "login.html", gin.H{
 			"ErrorMessage": "Por favor proporciona credenciales válidas",
 		})
@@ -71,17 +96,36 @@ func (h *Handlers) handleLoginPost(c *gin.Context) {
 	// Set session cookies
 	_, err = auth.SetUserSession(c, user, creds.Password, "Web Browser")
 	if err != nil {
+		logger.ErrorWithContext("auth", fmt.Sprintf("%d", user.ID), clientIP, "Failed to create user session", gin.H{
+			"username": user.Username,
+			"error": err.Error(),
+			"user_agent": userAgent,
+		})
 		h.renderTemplate(c, "login.html", gin.H{
 			"ErrorMessage": "Error al crear la sesión",
 		})
 		return
 	}
 
+	// Log successful login
+	logger.InfoWithContext("auth", fmt.Sprintf("%d", user.ID), clientIP, fmt.Sprintf("User '%s' logged in successfully", user.Username), gin.H{
+		"username": user.Username,
+		"method": loginMethod,
+		"user_agent": userAgent,
+	})
+
 	c.Redirect(http.StatusFound, "/")
 }
 
 // Logout handles user logout
 func (h *Handlers) Logout(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user != nil {
+		logger.InfoWithContext("auth", fmt.Sprintf("%d", user.ID), c.ClientIP(), fmt.Sprintf("User '%s' logged out", user.Username), gin.H{
+			"username": user.Username,
+			"user_agent": c.GetHeader("User-Agent"),
+		})
+	}
 	auth.ClearUserSession(c)
 	c.Redirect(http.StatusFound, "/login")
 }

@@ -371,23 +371,27 @@
                         </div>
                         <div class="card-body">
                             <div class="row mb-3">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <select class="form-select" id="log_level">
-                                        <option value="all">Todos los niveles</option>
+                                        <option value="">Todos los niveles</option>
                                         <option value="error">Solo errores</option>
                                         <option value="warning">Advertencias</option>
                                         <option value="info">Información</option>
+                                        <option value="debug">Depuración</option>
                                     </select>
                                 </div>
-                                <div class="col-md-4">
-                                    <input type="date" class="form-control" id="log_date" value="2024-12-15">
+                                <div class="col-md-3">
+                                    <input type="date" class="form-control" id="log_date">
                                 </div>
-                                <div class="col-md-4">
-                                    <button class="btn btn-outline-primary">
+                                <div class="col-md-3">
+                                    <input type="number" class="form-control" id="log_limit" placeholder="Límite" value="100" min="10" max="1000">
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-outline-primary" id="refresh_logs">
                                         <i class="fas fa-sync me-1"></i>
                                         Actualizar
                                     </button>
-                                    <button class="btn btn-outline-secondary">
+                                    <button class="btn btn-outline-secondary ms-1" id="download_logs">
                                         <i class="fas fa-download me-1"></i>
                                         Descargar
                                     </button>
@@ -395,17 +399,11 @@
                             </div>
                             <div class="card">
                                 <div class="card-body p-0">
-                                    <div style="height: 400px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px; background-color: #f8f9fa; padding: 15px;">
-                                        <div class="text-success">[2024-12-15 10:30:45] INFO: Sistema iniciado correctamente</div>
-                                        <div class="text-info">[2024-12-15 10:30:46] INFO: Base de datos conectada</div>
-                                        <div class="text-info">[2024-12-15 10:31:02] INFO: Usuario 'admin' inició sesión desde 192.168.1.100</div>
-                                        <div class="text-warning">[2024-12-15 10:35:15] WARN: Intento de acceso fallido para usuario 'test'</div>
-                                        <div class="text-info">[2024-12-15 10:40:22] INFO: Nuevo centro creado: 'Centro Educativo A'</div>
-                                        <div class="text-info">[2024-12-15 10:45:08] INFO: Nuevo usuario creado: 'profesor1'</div>
-                                        <div class="text-success">[2024-12-15 11:00:00] INFO: Respaldo automático completado</div>
-                                        <div class="text-danger">[2024-12-15 11:15:33] ERROR: Error temporal de conexión a la base de datos</div>
-                                        <div class="text-success">[2024-12-15 11:15:34] INFO: Conexión a la base de datos restaurada</div>
-                                        <div class="text-info">[2024-12-15 11:30:15] INFO: Usuario 'profesor1' inició sesión desde 192.168.1.105</div>
+                                    <div id="logs_container" style="height: 400px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px; background-color: #f8f9fa; padding: 15px;">
+                                        <div class="text-center text-muted py-4">
+                                            <i class="fas fa-spinner fa-spin me-2"></i>
+                                            Cargando registros...
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -416,4 +414,101 @@
         </div>
     </div>
 </div>
+
+<script>
+// Load logs when the page loads or when filters change
+function loadLogs() {
+    const level = document.getElementById('log_level').value;
+    const date = document.getElementById('log_date').value;
+    const limit = document.getElementById('log_limit').value || '100';
+    
+    const params = new URLSearchParams();
+    if (level) params.append('level', level);
+    if (date) params.append('date', date);
+    params.append('limit', limit);
+    
+    const container = document.getElementById('logs_container');
+    container.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin me-2"></i>Cargando registros...</div>';
+    
+    fetch(`/admin/configuracion/logs?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.logs && data.logs.length > 0) {
+                let html = '';
+                data.logs.forEach(log => {
+                    const levelClass = getLevelClass(log.level);
+                    const extraInfo = log.module || log.user_id || log.ip ? 
+                        ` <small class="text-muted">[${[log.module, log.user_id, log.ip].filter(x => x).join(', ')}]</small>` : '';
+                    html += `<div class="${levelClass}">[${log.timestamp}] ${log.level}: ${log.message}${extraInfo}</div>`;
+                });
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = '<div class="text-center text-muted py-4">No se encontraron registros para los filtros seleccionados.</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading logs:', error);
+            container.innerHTML = '<div class="text-center text-danger py-4"><i class="fas fa-exclamation-triangle me-2"></i>Error al cargar los registros.</div>';
+        });
+}
+
+function getLevelClass(level) {
+    switch (level) {
+        case 'ERROR':
+            return 'text-danger';
+        case 'WARN':
+            return 'text-warning';
+        case 'INFO':
+            return 'text-info';
+        case 'DEBUG':
+            return 'text-secondary';
+        default:
+            return '';
+    }
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Load logs when page loads
+    loadLogs();
+    
+    // Set today's date as default
+    document.getElementById('log_date').value = new Date().toISOString().split('T')[0];
+    
+    // Refresh button
+    document.getElementById('refresh_logs').addEventListener('click', loadLogs);
+    
+    // Auto-refresh when filters change
+    document.getElementById('log_level').addEventListener('change', loadLogs);
+    document.getElementById('log_date').addEventListener('change', loadLogs);
+    document.getElementById('log_limit').addEventListener('change', loadLogs);
+    
+    // Download logs functionality
+    document.getElementById('download_logs').addEventListener('click', function() {
+        const level = document.getElementById('log_level').value;
+        const date = document.getElementById('log_date').value;
+        const limit = document.getElementById('log_limit').value || '100';
+        
+        const params = new URLSearchParams();
+        if (level) params.append('level', level);
+        if (date) params.append('date', date);
+        params.append('limit', limit);
+        
+        // Create a temporary link to download the logs
+        const link = document.createElement('a');
+        link.href = `/admin/configuracion/logs?${params}&download=1`;
+        link.download = `figaro-logs-${date || 'all'}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+});
+
+// Auto-refresh every 30 seconds if no date filter is set
+setInterval(function() {
+    if (!document.getElementById('log_date').value) {
+        loadLogs();
+    }
+}, 30000);
+</script>
 {{end}}
