@@ -398,6 +398,148 @@ func (h *Handlers) AdminCentros(c *gin.Context) {
 	h.renderTemplate(c, "admin_centros.html", data)
 }
 
+// AdminCentroCrear handles center creation
+func (h *Handlers) AdminCentroCrear(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	if c.Request.Method == http.MethodPost {
+		h.handleCenterCreate(c)
+		return
+	}
+
+	// Show creation form
+	data := h.getCommonData(c)
+	data["PageTitle"] = "Figaró - Crear Centro"
+	data["Action"] = "crear"
+
+	h.renderTemplate(c, "admin_centro_form.html", data)
+}
+
+// handleCenterCreate processes center creation
+func (h *Handlers) handleCenterCreate(c *gin.Context) {
+	name := c.PostForm("nombre")
+	timezone := c.PostForm("timezone")
+
+	if name == "" {
+		data := h.getCommonData(c)
+		data["PageTitle"] = "Figaró - Crear Centro"
+		data["Action"] = "crear"
+		data["ErrorMessage"] = "El nombre del centro es obligatorio"
+		data["FormData"] = map[string]string{"nombre": name, "timezone": timezone}
+		h.renderTemplate(c, "admin_centro_form.html", data)
+		return
+	}
+
+	// Set default timezone if none provided
+	if timezone == "" {
+		timezone = "Europe/Madrid"
+	}
+
+	// Create center
+	err := h.createCenter(name, timezone)
+	if err != nil {
+		data := h.getCommonData(c)
+		data["PageTitle"] = "Figaró - Crear Centro"
+		data["Action"] = "crear"
+		data["ErrorMessage"] = "Error al crear el centro: " + err.Error()
+		data["FormData"] = map[string]string{"nombre": name, "timezone": timezone}
+		h.renderTemplate(c, "admin_centro_form.html", data)
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/admin/centros?success=Centro creado correctamente")
+}
+
+// AdminCentroEditar handles center editing
+func (h *Handlers) AdminCentroEditar(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	centerID := c.Param("id")
+	if centerID == "" {
+		c.Redirect(http.StatusFound, "/admin/centros?error=ID de centro requerido")
+		return
+	}
+
+	if c.Request.Method == http.MethodPost {
+		h.handleCenterUpdate(c, centerID)
+		return
+	}
+
+	// Get center data
+	center, err := h.getCenterByID(centerID)
+	if err != nil {
+		c.Redirect(http.StatusFound, "/admin/centros?error=Centro no encontrado")
+		return
+	}
+
+	// Show edit form
+	data := h.getCommonData(c)
+	data["PageTitle"] = "Figaró - Editar Centro"
+	data["Action"] = "editar"
+	data["Center"] = center
+
+	h.renderTemplate(c, "admin_centro_form.html", data)
+}
+
+// handleCenterUpdate processes center updates
+func (h *Handlers) handleCenterUpdate(c *gin.Context, centerID string) {
+	name := c.PostForm("nombre")
+	timezone := c.PostForm("timezone")
+
+	if name == "" {
+		center, _ := h.getCenterByID(centerID)
+		data := h.getCommonData(c)
+		data["PageTitle"] = "Figaró - Editar Centro"
+		data["Action"] = "editar"
+		data["Center"] = center
+		data["ErrorMessage"] = "El nombre del centro es obligatorio"
+		data["FormData"] = map[string]string{"nombre": name, "timezone": timezone}
+		h.renderTemplate(c, "admin_centro_form.html", data)
+		return
+	}
+
+	// Set default timezone if none provided
+	if timezone == "" {
+		timezone = "Europe/Madrid"
+	}
+
+	// Update center
+	err := h.updateCenter(centerID, name, timezone)
+	if err != nil {
+		center, _ := h.getCenterByID(centerID)
+		data := h.getCommonData(c)
+		data["PageTitle"] = "Figaró - Editar Centro"
+		data["Action"] = "editar"
+		data["Center"] = center
+		data["ErrorMessage"] = "Error al actualizar el centro: " + err.Error()
+		data["FormData"] = map[string]string{"nombre": name, "timezone": timezone}
+		h.renderTemplate(c, "admin_centro_form.html", data)
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/admin/centros?success=Centro actualizado correctamente")
+}
+
 // AdminMaterialesReport handles materials report page
 func (h *Handlers) AdminMaterialesReport(c *gin.Context) {
 	user := auth.GetCurrentUser(c)
@@ -940,5 +1082,19 @@ func (h *Handlers) updateClassroom(classroomID, name string) error {
 func (h *Handlers) deleteClassroom(classroomID string) error {
 	query := `DELETE FROM classrooms WHERE id = ?`
 	_, err := database.DB.Exec(query, classroomID)
+	return err
+}
+
+// createCenter creates a new center
+func (h *Handlers) createCenter(name, timezone string) error {
+	query := `INSERT INTO centers (name, timezone, created_at, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+	_, err := database.DB.Exec(query, name, timezone)
+	return err
+}
+
+// updateCenter updates a center
+func (h *Handlers) updateCenter(centerID, name, timezone string) error {
+	query := `UPDATE centers SET name = ?, timezone = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+	_, err := database.DB.Exec(query, name, timezone, centerID)
 	return err
 }
