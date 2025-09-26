@@ -1,217 +1,100 @@
 {{define "content"}}
-<div class="admin-usuarios-container">
-    <h1>Gestión de Usuarios</h1>
+<div class="container-fluid py-4">
+    <h1 class="mb-4">Gestión de Usuarios</h1>
     
-    <div class="action-buttons">
-        <a href="/admin/usuarios/crear" class="button azul">
-            <img loading="lazy" class="picto" src="/static/pictos/añadir.png"><br>
+    <div class="mb-4">
+        <a href="/admin/usuarios/crear" class="btn btn-primary me-2">
+            <i class="fas fa-user-plus me-1"></i>
             Crear Usuario
         </a>
-        <a href="/admin" class="button">
-            <img loading="lazy" class="picto" src="/static/pictos/admin.png"><br>
+        <a href="/admin" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>
             Volver al Panel
         </a>
     </div>
 
     {{if .Flash}}
-    <div class="alert {{if contains .Flash "success"}}alert-success{{else}}alert-danger{{end}}">
+    <div class="alert {{if contains .Flash "success"}}alert-success{{else}}alert-danger{{end}} alert-dismissible fade show">
         {{.Flash}}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     {{end}}
 
     <div class="users-list">
         {{if .Users}}
-        <table class="users-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Usuario</th>
-                    <th>Nombre</th>
-                    <th>Email</th>
-                    <th>Permisos</th>
-                    <th>Creado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{range .Users}}
-                <tr>
-                    <td>{{.ID}}</td>
-                    <td><strong>{{.Username}}</strong></td>
-                    <td>{{.DisplayName}}</td>
-                    <td>{{.Email}}</td>
-                    <td>
-                        <div class="permissions">
-                            {{range .Permissions}}
-                            <span class="permission-badge">{{.}}</span>
-                            {{end}}
-                        </div>
-                    </td>
-                    <td>{{.CreatedAt.Format "02/01/2006"}}</td>
-                    <td class="actions">
-                        <a href="/admin/usuarios/editar/{{.ID}}" class="button small">
-                            <img loading="lazy" class="picto-small" src="/static/pictos/escribir.png">
-                            Editar
-                        </a>
-                        {{if ne .ID $.User.ID}}
-                        <form method="POST" action="/admin/usuarios/eliminar/{{.ID}}" style="display: inline;">
-                            <button type="submit" class="button small rojo" 
-                                    onclick="return confirm('¿Estás seguro de que quieres eliminar este usuario?')">
-                                <img loading="lazy" class="picto-small" src="/static/pictos/borrar.png">
-                                Eliminar
-                            </button>
-                        </form>
-                        {{else}}
-                        <span class="text-muted">(Tu cuenta)</span>
-                        {{end}}
-                    </td>
-                </tr>
-                {{end}}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuario</th>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Permisos</th>
+                        <th>Creado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Users}}
+                    <tr>
+                        <td>{{.ID}}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-user me-2 text-primary"></i>
+                                <strong>{{.Username}}</strong>
+                            </div>
+                        </td>
+                        <td>{{.DisplayName}}</td>
+                        <td>{{.Email}}</td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+                                {{range .Permissions}}
+                                <span class="badge bg-primary">{{.}}</span>
+                                {{end}}
+                            </div>
+                        </td>
+                        <td>{{.CreatedAt.Format "02/01/2006"}}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="/admin/usuarios/editar/{{.ID}}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit me-1"></i>
+                                    Editar
+                                </a>
+                                {{if ne .ID $.User.ID}}
+                                <form method="POST" action="/admin/usuarios/eliminar/{{.ID}}" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                            onclick="return confirm('¿Estás seguro de que quieres eliminar este usuario?')">
+                                        <i class="fas fa-trash me-1"></i>
+                                        Eliminar
+                                    </button>
+                                </form>
+                                {{else}}
+                                <span class="btn btn-sm btn-outline-secondary disabled">(Tu cuenta)</span>
+                                {{end}}
+                            </div>
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
         {{else}}
-        <div class="empty-state">
-            <img src="/static/pictos/usuarios.png" alt="Sin usuarios" width="64" height="64">
-            <h3>No hay usuarios registrados</h3>
-            <p>Comienza creando el primer usuario.</p>
-            <a href="/admin/usuarios/crear" class="button azul">
-                <img loading="lazy" class="picto" src="/static/pictos/añadir.png"><br>
-                Crear Primer Usuario
-            </a>
+        <div class="text-center py-5">
+            <div class="card">
+                <div class="card-body">
+                    <i class="fas fa-users text-muted" style="font-size: 4rem;"></i>
+                    <h3 class="mt-3 mb-2">No hay usuarios registrados</h3>
+                    <p class="text-muted mb-4">Comienza creando el primer usuario.</p>
+                    <a href="/admin/usuarios/crear" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-1"></i>
+                        Crear Primer Usuario
+                    </a>
+                </div>
+            </div>
         </div>
         {{end}}
     </div>
 </div>
-
-<style>
-.admin-usuarios-container {
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 20px;
-}
-
-.action-buttons {
-    margin: 20px 0;
-    display: flex;
-    gap: 10px;
-}
-
-.users-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.users-table th,
-.users-table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-.users-table th {
-    background-color: #f8f9fa;
-    font-weight: bold;
-    color: #495057;
-}
-
-.users-table tr:hover {
-    background-color: #f8f9fa;
-}
-
-.permissions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-}
-
-.permission-badge {
-    background-color: #007bff;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-size: 11px;
-    font-weight: bold;
-}
-
-.actions {
-    display: flex;
-    gap: 5px;
-    align-items: center;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.empty-state img {
-    opacity: 0.5;
-    margin-bottom: 20px;
-}
-
-.empty-state h3 {
-    color: #6c757d;
-    margin-bottom: 10px;
-}
-
-.empty-state p {
-    color: #6c757d;
-    margin-bottom: 30px;
-}
-
-.alert {
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 4px;
-}
-
-.alert-success {
-    background-color: #d4edda;
-    border: 1px solid #c3e6cb;
-    color: #155724;
-}
-
-.alert-danger {
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    color: #721c24;
-}
-
-.text-muted {
-    color: #6c757d;
-    font-style: italic;
-}
-
-@media (max-width: 768px) {
-    .admin-usuarios-container {
-        margin: 10px;
-        padding: 10px;
-    }
-    
-    .users-table {
-        font-size: 12px;
-    }
-    
-    .users-table th,
-    .users-table td {
-        padding: 8px 6px;
-    }
-    
-    .actions {
-        flex-direction: column;
-        gap: 2px;
-    }
-    
-    .action-buttons {
-        flex-direction: column;
-    }
-}
-</style>
 {{end}}
+

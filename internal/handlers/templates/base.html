@@ -5,6 +5,7 @@
     <title>{{.PageTitle}}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="/static/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
     <link href="/static/style.css" rel="stylesheet" />
 </head>
 <body id="top">
@@ -75,41 +76,41 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <div class="navbar-nav me-auto">
                         <a class="nav-link" href="/elegir_centro">
-                            <img loading="lazy" class="picto me-1" src="/static/pictos/centro.png" style="width: 16px; height: 16px;">
+                            <i class="fas fa-building me-1"></i>
                             Elegir Centro
                         </a>
                         {{if call .HasAccess "materiales.index"}}
                         <a class="nav-link" href="/materiales">
-                            <img loading="lazy" class="picto me-1" src="/static/pictos/material_escolar.png" style="width: 16px; height: 16px;">
+                            <i class="fas fa-tools me-1"></i>
                             Materiales
                         </a>
                         {{end}}
                         {{if call .HasAccess "actividades.index"}}
                         <a class="nav-link" href="/actividades">
-                            <img loading="lazy" class="picto me-1" src="/static/pictos/actividades.png" style="width: 16px; height: 16px;">
+                            <i class="fas fa-tasks me-1"></i>
                             Actividades
                         </a>
                         {{end}}
                         {{if call .HasAccess "archivos.index"}}
                         <a class="nav-link" href="/archivos">
-                            <img loading="lazy" class="picto me-1" src="/static/pictos/archivos.png" style="width: 16px; height: 16px;">
+                            <i class="fas fa-folder me-1"></i>
                             Archivos
                         </a>
                         {{end}}
                         {{if call .HasAccess "ADMIN"}}
                         <a class="nav-link" href="/admin">
-                            <img loading="lazy" class="picto me-1" src="/static/pictos/datacenter.png" style="width: 16px; height: 16px;">
+                            <i class="fas fa-cog me-1"></i>
                             Administración
                         </a>
                         {{end}}
                     </div>
                     <div class="navbar-nav">
                         <a class="nav-link" href="/perfil">
-                            <img loading="lazy" class="picto me-1" src="/static/pictos/nombre.png" style="width: 16px; height: 16px;">
+                            <i class="fas fa-user me-1"></i>
                             Perfil
                         </a>
                         <a class="nav-link" href="/logout">
-                            <img loading="lazy" class="picto me-1" src="/static/pictos/candado.png" style="width: 16px; height: 16px;">
+                            <i class="fas fa-sign-out-alt me-1"></i>
                             Cerrar Sesión
                         </a>
                     </div>

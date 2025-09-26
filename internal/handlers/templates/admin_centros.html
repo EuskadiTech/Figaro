@@ -1,176 +1,84 @@
 {{define "content"}}
-<div class="admin-centros-container">
-    <h1>Gestión de Centros</h1>
+<div class="container-fluid py-4">
+    <h1 class="mb-4">Gestión de Centros</h1>
     
-    <div class="action-buttons">
-        <a href="/admin/centros/crear" class="button azul">
-            <img loading="lazy" class="picto" src="/static/pictos/añadir.png"><br>
+    <div class="mb-4">
+        <a href="/admin/centros/crear" class="btn btn-primary me-2">
+            <i class="fas fa-plus me-1"></i>
             Crear Centro
         </a>
-        <a href="/admin" class="button">
-            <img loading="lazy" class="picto" src="/static/pictos/admin.png"><br>
+        <a href="/admin" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>
             Volver al Panel
         </a>
     </div>
 
     <div class="centers-list">
         {{if .Centers}}
-        <table class="centers-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Zona Horaria</th>
-                    <th>Creado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{range .Centers}}
-                <tr>
-                    <td>{{.ID}}</td>
-                    <td>
-                        <strong>{{.Name}}</strong>
-                        <div class="center-info">
-                            <img loading="lazy" class="picto-small" src="/static/pictos/centro.png">
-                            Centro Educativo
-                        </div>
-                    </td>
-                    <td>{{.Timezone}}</td>
-                    <td>{{.CreatedAt.Format "02/01/2006"}}</td>
-                    <td class="actions">
-                        <a href="/admin/centros/editar/{{.ID}}" class="button small">
-                            <img loading="lazy" class="picto-small" src="/static/pictos/escribir.png">
-                            Editar
-                        </a>
-                        <a href="/admin/centros/aulas/{{.ID}}" class="button small azul">
-                            <img loading="lazy" class="picto-small" src="/static/pictos/aula.png">
-                            Aulas
-                        </a>
-                        <button class="button small rojo" 
-                                onclick="return confirm('¿Estás seguro de que quieres eliminar este centro?')">
-                            <img loading="lazy" class="picto-small" src="/static/pictos/borrar.png">
-                            Eliminar
-                        </button>
-                    </td>
-                </tr>
-                {{end}}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Zona Horaria</th>
+                        <th>Creado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Centers}}
+                    <tr>
+                        <td>{{.ID}}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-building me-2 text-primary"></i>
+                                <div>
+                                    <strong>{{.Name}}</strong>
+                                    <div class="text-muted small">Centro Educativo</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{.Timezone}}</td>
+                        <td>{{.CreatedAt.Format "02/01/2006"}}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="/admin/centros/editar/{{.ID}}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit me-1"></i>
+                                    Editar
+                                </a>
+                                <a href="/admin/centros/aulas/{{.ID}}" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-door-open me-1"></i>
+                                    Aulas
+                                </a>
+                                <button class="btn btn-sm btn-outline-danger" 
+                                        onclick="return confirm('¿Estás seguro de que quieres eliminar este centro?')">
+                                    <i class="fas fa-trash me-1"></i>
+                                    Eliminar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
         {{else}}
-        <div class="empty-state">
-            <img src="/static/pictos/centro.png" alt="Sin centros" width="64" height="64">
-            <h3>No hay centros registrados</h3>
-            <p>Comienza creando el primer centro educativo.</p>
-            <a href="/admin/centros/crear" class="button azul">
-                <img loading="lazy" class="picto" src="/static/pictos/añadir.png"><br>
-                Crear Primer Centro
-            </a>
+        <div class="text-center py-5">
+            <div class="card">
+                <div class="card-body">
+                    <i class="fas fa-building text-muted" style="font-size: 4rem;"></i>
+                    <h3 class="mt-3 mb-2">No hay centros registrados</h3>
+                    <p class="text-muted mb-4">Comienza creando el primer centro educativo.</p>
+                    <a href="/admin/centros/crear" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>
+                        Crear Primer Centro
+                    </a>
+                </div>
+            </div>
         </div>
         {{end}}
     </div>
 </div>
-
-<style>
-.admin-centros-container {
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 20px;
-}
-
-.action-buttons {
-    margin: 20px 0;
-    display: flex;
-    gap: 10px;
-}
-
-.centers-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.centers-table th,
-.centers-table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-.centers-table th {
-    background-color: #f8f9fa;
-    font-weight: bold;
-    color: #495057;
-}
-
-.centers-table tr:hover {
-    background-color: #f8f9fa;
-}
-
-.center-info {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 12px;
-    color: #666;
-    margin-top: 4px;
-}
-
-.actions {
-    display: flex;
-    gap: 5px;
-    align-items: center;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.empty-state img {
-    opacity: 0.5;
-    margin-bottom: 20px;
-}
-
-.empty-state h3 {
-    color: #6c757d;
-    margin-bottom: 10px;
-}
-
-.empty-state p {
-    color: #6c757d;
-    margin-bottom: 30px;
-}
-
-@media (max-width: 768px) {
-    .admin-centros-container {
-        margin: 10px;
-        padding: 10px;
-    }
-    
-    .centers-table {
-        font-size: 12px;
-    }
-    
-    .centers-table th,
-    .centers-table td {
-        padding: 8px 6px;
-    }
-    
-    .actions {
-        flex-direction: column;
-        gap: 2px;
-    }
-    
-    .action-buttons {
-        flex-direction: column;
-    }
-}
-</style>
 {{end}}
+
