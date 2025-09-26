@@ -69,7 +69,8 @@ func (h *Handlers) getActivities(centro string, searchQuery string, showPast boo
 	} else {
 		query = `SELECT id, center_id, title, description, start_datetime, end_datetime, is_global, status, meeting_url, web_url, created_at, updated_at 
 				FROM activities WHERE (center_id = (SELECT id FROM centers WHERE name = ?) OR is_global = 1) 
-				AND start_datetime >= datetime('now')`
+				AND start_datetime <= datetime('now', 'start of day', '+1 day', '-1 second')
+				AND end_datetime   >= datetime('now', 'start of day');`
 		args = []interface{}{centro}
 	}
 
