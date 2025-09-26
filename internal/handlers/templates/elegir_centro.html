@@ -11,7 +11,7 @@
                 {{range .Aulas}}
                 <div class="col-sm-6 col-md-4 col-lg-3">
                     <button type="submit" name="aula" value="{{.}}" class="btn btn-outline-primary w-100 p-4 h-100 d-flex flex-column align-items-center justify-content-center">
-                        <img loading="lazy" class="mb-2" src="/static/pictos/aula.png" style="width: 48px; height: 48px;">
+                        <i class="fas fa-door-open mb-2" style="font-size: 3rem;"></i>
                         <strong>{{.}}</strong>
                     </button>
                 </div>
@@ -20,7 +20,7 @@
         </form>
         <div class="text-center">
             <a href="/elegir_centro" class="btn btn-secondary">
-                <img loading="lazy" class="me-2" src="/static/pictos/cancelar.png" style="width: 16px; height: 16px;">
+                <i class="fas fa-arrow-left me-1"></i>
                 Volver a Centros
             </a>
         </div>
@@ -32,7 +32,7 @@
             {{range .Centers}}
             <div class="col-sm-6 col-md-4 col-lg-3">
                 <a href="/elegir_centro?centro={{.}}" class="btn btn-outline-primary w-100 p-4 h-100 d-flex flex-column align-items-center justify-content-center text-decoration-none">
-                    <img loading="lazy" class="mb-2" src="/static/pictos/centro.png" style="width: 48px; height: 48px;">
+                    <i class="fas fa-building mb-2" style="font-size: 3rem;"></i>
                     <strong>{{.}}</strong>
                 </a>
             </div>

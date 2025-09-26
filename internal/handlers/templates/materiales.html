@@ -1,11 +1,11 @@
 {{define "content"}}
-<div class="materiales-container">
-    <h1>Inventario de Materiales - {{.Centro}}</h1>
+<div class="container-fluid py-4">
+    <h1 class="mb-4">Inventario de Materiales - {{.Centro}}</h1>
     
     {{if call .HasAccess "materiales.create"}}
-    <div class="action-buttons">
-        <a href="/materiales/crear" class="button">
-            <img loading="lazy" class="picto" src="/static/pictos/nuevo.png"><br>
+    <div class="mb-4">
+        <a href="/materiales/crear" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>
             Añadir Material
         </a>
     </div>
@@ -13,183 +13,88 @@
 
     <div class="materiales-list">
         {{if .Materials}}
-        <table class="materials-table">
-            <thead>
-                <tr>
-                    <th>Foto</th>
-                    <th>Nombre</th>
-                    <th>Cantidad Disponible</th>
-                    <th>Cantidad Mínima</th>
-                    <th>Unidad</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{range .Materials}}
-                <tr {{if lt .AvailableQuantity .MinimumQuantity}}class="low-stock"{{end}}>
-                    <td>
-                        <img loading="lazy" src="{{if .PhotoPath}}{{.PhotoPath}}{{else}}/static/pictos/material_escolar.png{{end}}" 
-                             alt="{{.Name}}" class="material-photo">
-                    </td>
-                    <td><strong>{{.Name}}</strong>
-                        {{if .Notes}}<br><small class="notes">{{.Notes}}</small>{{end}}
-                    </td>
-                    <td class="quantity">{{.AvailableQuantity}}</td>
-                    <td class="quantity">{{.MinimumQuantity}}</td>
-                    <td>{{.Unit}}</td>
-                    <td>
-                        {{if lt .AvailableQuantity .MinimumQuantity}}
-                        <span class="status-warning">⚠️ Stock Bajo</span>
-                        {{else if eq .AvailableQuantity 0}}
-                        <span class="status-danger">❌ Sin Stock</span>
-                        {{else}}
-                        <span class="status-ok">✅ Disponible</span>
-                        {{end}}
-                    </td>
-                    <td class="actions">
-                        {{if call $.HasAccess "materiales.update"}}
-                        <a href="/materiales/editar/{{.ID}}" class="button small">
-                            <img loading="lazy" class="picto-small" src="/static/pictos/escribir.png">
-                            Editar
-                        </a>
-                        {{end}}
-                        {{if call $.HasAccess "materiales.delete"}}
-                        <form method="POST" action="/materiales/eliminar/{{.ID}}" style="display: inline;">
-                            <button type="submit" class="button small rojo"
-                                    onclick="return confirm('¿Estás seguro de que quieres eliminar este material?')">
-                                <img loading="lazy" class="picto-small" src="/static/pictos/borrar.png">
-                                Eliminar
-                            </button>
-                        </form>
-                        {{end}}
-                    </td>
-                </tr>
-                {{end}}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Foto</th>
+                        <th>Nombre</th>
+                        <th>Cantidad Disponible</th>
+                        <th>Cantidad Mínima</th>
+                        <th>Unidad</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Materials}}
+                    <tr {{if lt .AvailableQuantity .MinimumQuantity}}class="table-warning"{{end}}>
+                        <td>
+                            {{if .PhotoPath}}
+                            <img loading="lazy" src="{{.PhotoPath}}" alt="{{.Name}}" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                            {{else}}
+                            <div class="d-flex align-items-center justify-content-center rounded bg-light" style="width: 50px; height: 50px;">
+                                <i class="fas fa-tools text-muted"></i>
+                            </div>
+                            {{end}}
+                        </td>
+                        <td>
+                            <strong>{{.Name}}</strong>
+                            {{if .Notes}}<br><small class="text-muted">{{.Notes}}</small>{{end}}
+                        </td>
+                        <td class="text-center fw-bold">{{.AvailableQuantity}}</td>
+                        <td class="text-center fw-bold">{{.MinimumQuantity}}</td>
+                        <td>{{.Unit}}</td>
+                        <td>
+                            {{if lt .AvailableQuantity .MinimumQuantity}}
+                            <span class="badge bg-warning text-dark"><i class="fas fa-exclamation-triangle me-1"></i>Stock Bajo</span>
+                            {{else if eq .AvailableQuantity 0}}
+                            <span class="badge bg-danger"><i class="fas fa-times me-1"></i>Sin Stock</span>
+                            {{else}}
+                            <span class="badge bg-success"><i class="fas fa-check me-1"></i>Disponible</span>
+                            {{end}}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                {{if call $.HasAccess "materiales.update"}}
+                                <a href="/materiales/editar/{{.ID}}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit me-1"></i>
+                                    Editar
+                                </a>
+                                {{end}}
+                                {{if call $.HasAccess "materiales.delete"}}
+                                <form method="POST" action="/materiales/eliminar/{{.ID}}" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('¿Estás seguro de que quieres eliminar este material?')">
+                                        <i class="fas fa-trash me-1"></i>
+                                        Eliminar
+                                    </button>
+                                </form>
+                                {{end}}
+                            </div>
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
         {{else}}
-        <div class="empty-state">
-            <img src="/static/pictos/material_escolar.png" alt="Sin materiales" width="64" height="64">
-            <h3>No hay materiales en el inventario</h3>
-            <p>Comienza añadiendo algunos materiales a tu inventario.</p>
-            {{if call .HasAccess "materiales.create"}}
-            <a href="/materiales/crear" class="button">
-                <img loading="lazy" class="picto" src="/static/pictos/nuevo.png"><br>
-                Añadir Primer Material
-            </a>
-            {{end}}
+        <div class="text-center py-5">
+            <div class="card">
+                <div class="card-body">
+                    <i class="fas fa-tools text-muted" style="font-size: 4rem;"></i>
+                    <h3 class="mt-3 mb-2">No hay materiales en el inventario</h3>
+                    <p class="text-muted mb-4">Comienza añadiendo algunos materiales a tu inventario.</p>
+                    {{if call .HasAccess "materiales.create"}}
+                    <a href="/materiales/crear" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>
+                        Añadir Primer Material
+                    </a>
+                    {{end}}
+                </div>
+            </div>
         </div>
         {{end}}
     </div>
-</div>
-
-<style>
-.materiales-container {
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 20px;
-}
-
-.action-buttons {
-    margin: 20px 0;
-    display: flex;
-    gap: 10px;
-}
-
-.materials-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 20px 0;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.materials-table th,
-.materials-table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-.materials-table th {
-    background-color: #f8f9fa;
-    font-weight: bold;
-    color: #333;
-}
-
-.materials-table tr:hover {
-    background-color: #f5f5f5;
-}
-
-.materials-table tr.low-stock {
-    background-color: #fff3cd;
-}
-
-.material-photo {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 4px;
-}
-
-.notes {
-    color: #666;
-    font-style: italic;
-}
-
-.quantity {
-    text-align: center;
-    font-weight: bold;
-}
-
-.status-ok { color: #28a745; font-weight: bold; }
-.status-warning { color: #ffc107; font-weight: bold; }
-.status-danger { color: #dc3545; font-weight: bold; }
-
-.actions {
-    white-space: nowrap;
-}
-
-.button.small {
-    padding: 4px 8px;
-    font-size: 12px;
-    margin-right: 5px;
-}
-
-.picto-small {
-    width: 16px;
-    height: 16px;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: #666;
-}
-
-.empty-state img {
-    opacity: 0.5;
-    margin-bottom: 20px;
-}
-
-@media (max-width: 768px) {
-    .materials-table {
-        font-size: 14px;
-    }
-    
-    .materials-table th,
-    .materials-table td {
-        padding: 8px;
-    }
-    
-    .material-photo {
-        width: 40px;
-        height: 40px;
-    }
-}
-</style>
 </div>
 {{end}}

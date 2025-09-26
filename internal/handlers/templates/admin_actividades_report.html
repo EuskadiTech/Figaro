@@ -84,7 +84,7 @@
             <div class="card text-center">
                 <div class="card-body">
                     <i class="fas fa-clipboard-list text-primary" style="font-size: 2.5rem;"></i>
-                    <h3 class="mt-2 mb-1">156</h3>
+                    <h3 class="mt-2 mb-1">{{.Stats.TotalActivities}}</h3>
                     <p class="text-muted mb-0">Total Actividades</p>
                 </div>
             </div>
@@ -93,7 +93,7 @@
             <div class="card text-center">
                 <div class="card-body">
                     <i class="fas fa-hourglass-start text-warning" style="font-size: 2.5rem;"></i>
-                    <h3 class="mt-2 mb-1">42</h3>
+                    <h3 class="mt-2 mb-1">{{.Stats.InProgressActivities}}</h3>
                     <p class="text-muted mb-0">En Progreso</p>
                 </div>
             </div>
@@ -102,7 +102,7 @@
             <div class="card text-center">
                 <div class="card-body">
                     <i class="fas fa-check-circle text-success" style="font-size: 2.5rem;"></i>
-                    <h3 class="mt-2 mb-1">89</h3>
+                    <h3 class="mt-2 mb-1">{{.Stats.CompletedActivities}}</h3>
                     <p class="text-muted mb-0">Completadas</p>
                 </div>
             </div>
@@ -111,7 +111,7 @@
             <div class="card text-center">
                 <div class="card-body">
                     <i class="fas fa-clock text-info" style="font-size: 2.5rem;"></i>
-                    <h3 class="mt-2 mb-1">25</h3>
+                    <h3 class="mt-2 mb-1">{{.Stats.PendingActivities}}</h3>
                     <p class="text-muted mb-0">Pendientes</p>
                 </div>
             </div>
@@ -140,120 +140,80 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {{if .Activities}}
+                        {{range .Activities}}
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <i class="fas fa-book text-primary me-2"></i>
+                                    <i class="fas fa-tasks text-primary me-2"></i>
                                     <div>
-                                        <strong>Proyecto de Lectura</strong>
-                                        <div class="text-muted small">Literatura Infantil</div>
+                                        <strong>{{.Title}}</strong>
+                                        {{if .Description}}<div class="text-muted small">{{.Description}}</div>{{end}}
                                     </div>
                                 </div>
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">
+                                    {{if .IsGlobal}}
+                                    <i class="fas fa-globe text-info me-2"></i>
+                                    {{else}}
                                     <i class="fas fa-building text-info me-2"></i>
-                                    Centro A
+                                    {{end}}
+                                    {{.CenterName}}
                                 </div>
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">
                                     <i class="fas fa-user text-secondary me-2"></i>
-                                    Prof. García
+                                    Sistema
                                 </div>
                             </td>
                             <td>
-                                <span class="badge bg-warning">En Progreso</span>
-                            </td>
-                            <td>
-                                <small>01/12/2024</small>
-                            </td>
-                            <td>
-                                <small>15/12/2024</small>
-                            </td>
-                            <td>
-                                <div class="progress" style="height: 8px;">
-                                    <div class="progress-bar bg-warning" style="width: 65%"></div>
-                                </div>
-                                <small class="text-muted">65%</small>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-calculator text-success me-2"></i>
-                                    <div>
-                                        <strong>Taller de Matemáticas</strong>
-                                        <div class="text-muted small">Álgebra Básica</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-building text-info me-2"></i>
-                                    Centro B
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-user text-secondary me-2"></i>
-                                    Prof. López
-                                </div>
-                            </td>
-                            <td>
+                                {{$now := now}}
+                                {{if .EndDatetime.Before $now}}
                                 <span class="badge bg-success">Completada</span>
-                            </td>
-                            <td>
-                                <small>20/11/2024</small>
-                            </td>
-                            <td>
-                                <small>30/11/2024</small>
-                            </td>
-                            <td>
-                                <div class="progress" style="height: 8px;">
-                                    <div class="progress-bar bg-success" style="width: 100%"></div>
-                                </div>
-                                <small class="text-muted">100%</small>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-paint-brush text-danger me-2"></i>
-                                    <div>
-                                        <strong>Taller de Arte</strong>
-                                        <div class="text-muted small">Pintura y Expresión</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-building text-info me-2"></i>
-                                    Centro C
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-user text-secondary me-2"></i>
-                                    Prof. Martín
-                                </div>
-                            </td>
-                            <td>
+                                {{else if .StartDatetime.After $now}}
                                 <span class="badge bg-info">Pendiente</span>
+                                {{else}}
+                                <span class="badge bg-warning">En Progreso</span>
+                                {{end}}
                             </td>
                             <td>
-                                <small>20/12/2024</small>
+                                <small>{{.StartDatetime.Format "02/01/2006"}}</small>
                             </td>
                             <td>
-                                <small>30/12/2024</small>
+                                <small>{{.EndDatetime.Format "02/01/2006"}}</small>
                             </td>
                             <td>
-                                <div class="progress" style="height: 8px;">
-                                    <div class="progress-bar bg-info" style="width: 10%"></div>
-                                </div>
-                                <small class="text-muted">10%</small>
+                                {{$now := now}}
+                                {{$progress := 0}}
+                                {{if .EndDatetime.Before $now}}
+                                    {{$progress := 100}}
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-success" style="width: 100%"></div>
+                                    </div>
+                                    <small class="text-muted">100%</small>
+                                {{else if .StartDatetime.After $now}}
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-info" style="width: 10%"></div>
+                                    </div>
+                                    <small class="text-muted">10%</small>
+                                {{else}}
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-warning" style="width: 65%"></div>
+                                    </div>
+                                    <small class="text-muted">65%</small>
+                                {{end}}
                             </td>
                         </tr>
+                        {{end}}
+                        {{else}}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                No hay actividades registradas en el sistema.
+                            </td>
+                        </tr>
+                        {{end}}
                     </tbody>
                 </table>
             </div>

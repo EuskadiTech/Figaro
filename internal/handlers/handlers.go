@@ -69,6 +69,9 @@ func (h *Handlers) loadTemplate(templateName string) (*template.Template, error)
 			}
 			return false
 		},
+		"now": func() time.Time {
+			return time.Now()
+		},
 	})
 
 	// First, always load base.html
@@ -1562,8 +1565,26 @@ func (h *Handlers) AdminMaterialesReport(c *gin.Context) {
 		return
 	}
 
+	// Get all centers for filter dropdown
+	centers, err := h.getAllCenters()
+	if err != nil {
+		centers = []models.Center{}
+	}
+
+	// Get all materials with center information
+	materials, err := h.getAllMaterialsWithCenter()
+	if err != nil {
+		materials = []models.MaterialWithCenter{}
+	}
+
+	// Calculate statistics
+	stats := h.calculateMaterialStats(materials)
+
 	data := h.getCommonData(c)
 	data["PageTitle"] = "Figaró - Informe de Materiales por Centro"
+	data["Centers"] = centers
+	data["Materials"] = materials
+	data["Stats"] = stats
 
 	h.renderTemplate(c, "admin_materiales_report.html", data)
 }
@@ -1582,8 +1603,26 @@ func (h *Handlers) AdminActividadesReport(c *gin.Context) {
 		return
 	}
 
+	// Get all centers for filter dropdown
+	centers, err := h.getAllCenters()
+	if err != nil {
+		centers = []models.Center{}
+	}
+
+	// Get recent activities with center information
+	activities, err := h.getAllActivitiesWithCenter()
+	if err != nil {
+		activities = []models.ActivityWithCenter{}
+	}
+
+	// Calculate statistics
+	stats := h.calculateActivityStats()
+
 	data := h.getCommonData(c)
 	data["PageTitle"] = "Figaró - Informe de Actividades"
+	data["Centers"] = centers
+	data["Activities"] = activities
+	data["Stats"] = stats
 
 	h.renderTemplate(c, "admin_actividades_report.html", data)
 }
@@ -1686,6 +1725,112 @@ func (h *Handlers) getAllCenters() ([]models.Center, error) {
 	}
 
 	return centers, nil
+}
+
+// getAllMaterialsWithCenter gets all materials with their center names
+func (h *Handlers) getAllMaterialsWithCenter() ([]models.MaterialWithCenter, error) {
+	query := `
+		SELECT m.id, m.center_id, c.name as center_name, m.name, m.photo_path, m.unit, 
+			   m.available_quantity, m.minimum_quantity, m.notes, m.created_at, m.updated_at
+		FROM materials m
+		JOIN centers c ON m.center_id = c.id
+		ORDER BY c.name, m.name
+	`
+
+	rows, err := database.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var materials []models.MaterialWithCenter
+	for rows.Next() {
+		var material models.MaterialWithCenter
+		err := rows.Scan(&material.ID, &material.CenterID, &material.CenterName, &material.Name,
+			&material.PhotoPath, &material.Unit, &material.AvailableQuantity, &material.MinimumQuantity,
+			&material.Notes, &material.CreatedAt, &material.UpdatedAt)
+		if err != nil {
+			continue
+		}
+		materials = append(materials, material)
+	}
+
+	return materials, nil
+}
+
+// calculateMaterialStats calculates statistics from materials data
+func (h *Handlers) calculateMaterialStats(materials []models.MaterialWithCenter) models.MaterialStats {
+	stats := models.MaterialStats{}
+	stats.TotalMaterials = len(materials)
+	
+	centersMap := make(map[int]bool)
+	for _, material := range materials {
+		centersMap[material.CenterID] = true
+		
+		if material.AvailableQuantity >= material.MinimumQuantity {
+			stats.HealthyMaterials++
+		} else {
+			stats.LowStockMaterials++
+		}
+	}
+	stats.TotalCenters = len(centersMap)
+	
+	return stats
+}
+
+// getAllActivitiesWithCenter gets all activities with their center names
+func (h *Handlers) getAllActivitiesWithCenter() ([]models.ActivityWithCenter, error) {
+	query := `
+		SELECT a.id, a.center_id, COALESCE(c.name, 'Global') as center_name, a.title, a.description,
+			   a.start_datetime, a.end_datetime, a.is_global, a.meeting_url, a.web_url,
+			   a.created_at, a.updated_at
+		FROM activities a
+		LEFT JOIN centers c ON a.center_id = c.id
+		ORDER BY a.start_datetime DESC
+		LIMIT 10
+	`
+
+	rows, err := database.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var activities []models.ActivityWithCenter
+	for rows.Next() {
+		var activity models.ActivityWithCenter
+		err := rows.Scan(&activity.ID, &activity.CenterID, &activity.CenterName, &activity.Title,
+			&activity.Description, &activity.StartDatetime, &activity.EndDatetime, &activity.IsGlobal,
+			&activity.MeetingURL, &activity.WebURL, &activity.CreatedAt, &activity.UpdatedAt)
+		if err != nil {
+			continue
+		}
+		activities = append(activities, activity)
+	}
+
+	return activities, nil
+}
+
+// calculateActivityStats calculates statistics from activities data
+func (h *Handlers) calculateActivityStats() models.ActivityStats {
+	stats := models.ActivityStats{}
+	
+	// Count total activities
+	database.DB.QueryRow("SELECT COUNT(*) FROM activities").Scan(&stats.TotalActivities)
+	
+	// Count activities by status based on current time
+	now := time.Now()
+	
+	// Pending (future start date)
+	database.DB.QueryRow("SELECT COUNT(*) FROM activities WHERE start_datetime > ?", now).Scan(&stats.PendingActivities)
+	
+	// In Progress (current time between start and end)
+	database.DB.QueryRow("SELECT COUNT(*) FROM activities WHERE start_datetime <= ? AND end_datetime >= ?", now, now).Scan(&stats.InProgressActivities)
+	
+	// Completed (past end date)
+	database.DB.QueryRow("SELECT COUNT(*) FROM activities WHERE end_datetime < ?", now).Scan(&stats.CompletedActivities)
+	
+	return stats
 }
 
 // Static serves static files from embedded filesystem

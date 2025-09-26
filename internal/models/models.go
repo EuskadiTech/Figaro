@@ -132,3 +132,50 @@ func (nt NullTime) Value() (driver.Value, error) {
 	}
 	return nt.Time, nil
 }
+
+// MaterialWithCenter represents a material with its center name
+type MaterialWithCenter struct {
+	ID                int       `json:"id"`
+	CenterID          int       `json:"center_id"`
+	CenterName        string    `json:"center_name"`
+	Name              string    `json:"name"`
+	PhotoPath         *string   `json:"photo_path"`
+	Unit              string    `json:"unit"`
+	AvailableQuantity int       `json:"available_quantity"`
+	MinimumQuantity   int       `json:"minimum_quantity"`
+	Notes             string    `json:"notes"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
+}
+
+// MaterialStats represents statistics about materials
+type MaterialStats struct {
+	TotalMaterials     int `json:"total_materials"`
+	TotalCenters       int `json:"total_centers"`
+	HealthyMaterials   int `json:"healthy_materials"`
+	LowStockMaterials  int `json:"low_stock_materials"`
+}
+
+// ActivityWithCenter represents an activity with its center name
+type ActivityWithCenter struct {
+	ID            int       `json:"id"`
+	CenterID      *int      `json:"center_id"`
+	CenterName    string    `json:"center_name"`
+	Title         string    `json:"title"`
+	Description   string    `json:"description"`
+	StartDatetime time.Time `json:"start_datetime"`
+	EndDatetime   time.Time `json:"end_datetime"`
+	IsGlobal      bool      `json:"is_global"`
+	MeetingURL    *string   `json:"meeting_url"`
+	WebURL        *string   `json:"web_url"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+// ActivityStats represents statistics about activities
+type ActivityStats struct {
+	TotalActivities     int `json:"total_activities"`
+	PendingActivities   int `json:"pending_activities"`
+	InProgressActivities int `json:"in_progress_activities"`
+	CompletedActivities int `json:"completed_activities"`
+}

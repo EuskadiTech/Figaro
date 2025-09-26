@@ -79,28 +79,28 @@
                 <div class="col-md-3">
                     <div class="border rounded p-3">
                         <i class="fas fa-tools text-primary" style="font-size: 2rem;"></i>
-                        <h4 class="mt-2 mb-1">1,234</h4>
+                        <h4 class="mt-2 mb-1">{{.Stats.TotalMaterials}}</h4>
                         <p class="text-muted mb-0">Total Materiales</p>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="border rounded p-3">
                         <i class="fas fa-building text-info" style="font-size: 2rem;"></i>
-                        <h4 class="mt-2 mb-1">12</h4>
+                        <h4 class="mt-2 mb-1">{{.Stats.TotalCenters}}</h4>
                         <p class="text-muted mb-0">Centros</p>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="border rounded p-3">
                         <i class="fas fa-check-circle text-success" style="font-size: 2rem;"></i>
-                        <h4 class="mt-2 mb-1">1,156</h4>
+                        <h4 class="mt-2 mb-1">{{.Stats.HealthyMaterials}}</h4>
                         <p class="text-muted mb-0">En Buen Estado</p>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="border rounded p-3">
                         <i class="fas fa-exclamation-triangle text-warning" style="font-size: 2rem;"></i>
-                        <h4 class="mt-2 mb-1">78</h4>
+                        <h4 class="mt-2 mb-1">{{.Stats.LowStockMaterials}}</h4>
                         <p class="text-muted mb-0">Necesita Mantenimiento</p>
                     </div>
                 </div>
@@ -119,48 +119,43 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {{if .Materials}}
+                        {{range .Materials}}
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
                                     <i class="fas fa-building text-primary me-2"></i>
-                                    Centro Educativo A
+                                    {{.CenterName}}
                                 </div>
                             </td>
-                            <td>Ordenadores Portátiles</td>
+                            <td>{{.Name}}</td>
                             <td>
-                                <span class="badge bg-info">Electrónico</span>
+                                <span class="badge bg-secondary">General</span>
                             </td>
                             <td>
-                                <span class="fw-bold">25</span>
+                                <span class="fw-bold">{{.AvailableQuantity}} {{.Unit}}</span>
                             </td>
                             <td>
+                                {{if lt .AvailableQuantity .MinimumQuantity}}
+                                <span class="badge bg-warning text-dark">Stock Bajo</span>
+                                {{else if eq .AvailableQuantity 0}}
+                                <span class="badge bg-danger">Sin Stock</span>
+                                {{else}}
                                 <span class="badge bg-success">Buen Estado</span>
+                                {{end}}
                             </td>
                             <td>
-                                <small class="text-muted">15/12/2024</small>
+                                <small class="text-muted">{{.UpdatedAt.Format "02/01/2006"}}</small>
                             </td>
                         </tr>
+                        {{end}}
+                        {{else}}
                         <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-building text-primary me-2"></i>
-                                    Centro Educativo B
-                                </div>
-                            </td>
-                            <td>Mesas Escolares</td>
-                            <td>
-                                <span class="badge bg-secondary">Mobiliario</span>
-                            </td>
-                            <td>
-                                <span class="fw-bold">40</span>
-                            </td>
-                            <td>
-                                <span class="badge bg-warning">Mantenimiento</span>
-                            </td>
-                            <td>
-                                <small class="text-muted">12/12/2024</small>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No hay materiales registrados en el sistema.
                             </td>
                         </tr>
+                        {{end}}
                     </tbody>
                 </table>
             </div>
