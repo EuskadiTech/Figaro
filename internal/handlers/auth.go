@@ -1,14 +1,18 @@
 package handlers
 
 import (
+	"context"
+	"crypto/sha256"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/EuskadiTech/Figaro/internal/auth"
 	"github.com/EuskadiTech/Figaro/internal/database"
 	"github.com/EuskadiTech/Figaro/internal/models"
 	"github.com/EuskadiTech/Figaro/pkg/logger"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/oauth2"
 )
 
 // Index handles the home page
@@ -24,10 +28,23 @@ func (h *Handlers) Login(c *gin.Context) {
 		return
 	}
 
+	// Check if OAuth is enabled
+	oauthEnabled := false
+	if _, err := auth.GetGoogleOAuthConfig(); err == nil {
+		oauthEnabled = true
+	}
+
 	// Show login form
 	data := gin.H{
-		"PageTitle": "Figaró - Iniciar Sesión",
+		"PageTitle":    "Figaró - Iniciar Sesión",
+		"OAuthEnabled": oauthEnabled,
 	}
+	
+	// Handle error messages
+	if errorMsg := c.Query("error"); errorMsg != "" {
+		data["ErrorMessage"] = errorMsg
+	}
+	
 	h.renderTemplate(c, "login.html", data)
 }
 
@@ -276,4 +293,164 @@ func (h *Handlers) getAulas(centro string) ([]string, error) {
 	}
 
 	return aulaNames, nil
+}
+
+// GoogleOAuthLogin initiates Google OAuth login flow
+func (h *Handlers) GoogleOAuthLogin(c *gin.Context) {
+	config, err := auth.GetGoogleOAuthConfig()
+	if err != nil {
+		if err == auth.ErrOAuthDisabled {
+			c.Redirect(http.StatusFound, "/login?error=OAuth está deshabilitado")
+			return
+		}
+		if err == auth.ErrOAuthMisconfigured {
+			c.Redirect(http.StatusFound, "/login?error=OAuth no está configurado correctamente")
+			return
+		}
+		c.Redirect(http.StatusFound, "/login?error=Error de configuración OAuth")
+		return
+	}
+
+	// Generate state for CSRF protection
+	state := fmt.Sprintf("%x", sha256.Sum256([]byte(fmt.Sprintf("%d", time.Now().Unix()))))
+	
+	// Store state in session (simple approach using cookie)
+	c.SetCookie("oauth_state", state, 300, "/", "", false, true) // 5 minutes
+
+	url := config.AuthCodeURL(state, oauth2.AccessTypeOffline)
+	c.Redirect(http.StatusTemporaryRedirect, url)
+}
+
+// GoogleOAuthCallback handles Google OAuth callback
+func (h *Handlers) GoogleOAuthCallback(c *gin.Context) {
+	clientIP := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+
+	// Verify state to prevent CSRF
+	state := c.Query("state")
+	storedState, err := c.Cookie("oauth_state")
+	if err != nil || state == "" || state != storedState {
+		logger.WarnWithContext("auth", "", clientIP, "OAuth callback with invalid state", gin.H{
+			"provided_state": state,
+			"stored_state": storedState,
+			"user_agent": userAgent,
+		})
+		c.Redirect(http.StatusFound, "/login?error=Estado de OAuth inválido")
+		return
+	}
+
+	// Clear the state cookie
+	c.SetCookie("oauth_state", "", -1, "/", "", false, true)
+
+	// Get authorization code
+	code := c.Query("code")
+	if code == "" {
+		error_desc := c.Query("error")
+		logger.WarnWithContext("auth", "", clientIP, "OAuth callback without authorization code", gin.H{
+			"error": error_desc,
+			"user_agent": userAgent,
+		})
+		c.Redirect(http.StatusFound, "/login?error=Autorización de Google denegada")
+		return
+	}
+
+	config, err := auth.GetGoogleOAuthConfig()
+	if err != nil {
+		logger.ErrorWithContext("auth", "", clientIP, "Failed to get OAuth config during callback", gin.H{
+			"error": err.Error(),
+			"user_agent": userAgent,
+		})
+		c.Redirect(http.StatusFound, "/login?error=Error de configuración OAuth")
+		return
+	}
+
+	// Exchange authorization code for token
+	token, err := config.Exchange(context.Background(), code)
+	if err != nil {
+		logger.ErrorWithContext("auth", "", clientIP, "Failed to exchange OAuth code for token", gin.H{
+			"error": err.Error(),
+			"user_agent": userAgent,
+		})
+		c.Redirect(http.StatusFound, "/login?error=Error al obtener token de Google")
+		return
+	}
+
+	// Get user info from Google
+	userInfo, err := auth.GetGoogleUserInfo(token)
+	if err != nil {
+		logger.ErrorWithContext("auth", "", clientIP, "Failed to get user info from Google", gin.H{
+			"error": err.Error(),
+			"user_agent": userAgent,
+		})
+		c.Redirect(http.StatusFound, "/login?error=Error al obtener información del usuario")
+		return
+	}
+
+	// Validate domain if configured
+	if err := auth.ValidateGoogleOAuthDomain(userInfo); err != nil {
+		logger.WarnWithContext("auth", "", clientIP, "OAuth login attempt from restricted domain", gin.H{
+			"email": userInfo.Email,
+			"error": err.Error(),
+			"user_agent": userAgent,
+		})
+		c.Redirect(http.StatusFound, "/login?error=Dominio no permitido: "+err.Error())
+		return
+	}
+
+	// Try to find existing user by email
+	var user *models.User
+	user, err = auth.GetUserByEmail(userInfo.Email)
+	if err != nil && err != auth.ErrUserNotFound {
+		logger.ErrorWithContext("auth", "", clientIP, "Database error during OAuth login", gin.H{
+			"email": userInfo.Email,
+			"error": err.Error(),
+			"user_agent": userAgent,
+		})
+		c.Redirect(http.StatusFound, "/login?error=Error de base de datos")
+		return
+	}
+
+	// If user doesn't exist, create one with read-only permissions
+	if err == auth.ErrUserNotFound {
+		user, err = auth.CreateUserFromGoogleOAuth(userInfo)
+		if err != nil {
+			logger.ErrorWithContext("auth", "", clientIP, "Failed to create user from OAuth", gin.H{
+				"email": userInfo.Email,
+				"name": userInfo.Name,
+				"error": err.Error(),
+				"user_agent": userAgent,
+			})
+			c.Redirect(http.StatusFound, "/login?error=Error al crear usuario")
+			return
+		}
+		logger.InfoWithContext("auth", fmt.Sprintf("%d", user.ID), clientIP, fmt.Sprintf("New user created via Google OAuth: '%s'", user.Email), gin.H{
+			"username": user.Username,
+			"email": user.Email,
+			"name": userInfo.Name,
+			"user_agent": userAgent,
+		})
+	}
+
+	// Set session cookies (using empty password for OAuth users)
+	_, err = auth.SetUserSession(c, user, "", "Google OAuth")
+	if err != nil {
+		logger.ErrorWithContext("auth", fmt.Sprintf("%d", user.ID), clientIP, "Failed to create user session for OAuth login", gin.H{
+			"username": user.Username,
+			"email": user.Email,
+			"error": err.Error(),
+			"user_agent": userAgent,
+		})
+		c.Redirect(http.StatusFound, "/login?error=Error al crear la sesión")
+		return
+	}
+
+	// Log successful OAuth login
+	logger.InfoWithContext("auth", fmt.Sprintf("%d", user.ID), clientIP, fmt.Sprintf("User '%s' logged in successfully via Google OAuth", user.Email), gin.H{
+		"username": user.Username,
+		"email": user.Email,
+		"method": "Google OAuth",
+		"user_agent": userAgent,
+	})
+
+	c.Redirect(http.StatusFound, "/")
 }

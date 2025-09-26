@@ -13,17 +13,23 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"context"
+	"encoding/json"
 
 	"github.com/EuskadiTech/Figaro/internal/database"
 	"github.com/EuskadiTech/Figaro/internal/models"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 var (
 	ErrInvalidCredentials = errors.New("invalid username or password")
 	ErrUserNotFound       = errors.New("user not found")
 	ErrInvalidQRData      = errors.New("invalid QR code data")
+	ErrOAuthDisabled      = errors.New("oauth is disabled")
+	ErrOAuthMisconfigured = errors.New("oauth is not properly configured")
 )
 
 // LoginCredentials represents login form data
@@ -31,6 +37,19 @@ type LoginCredentials struct {
 	Username string `form:"username" json:"username"`
 	Password string `form:"password" json:"password"`
 	QRData   string `form:"qr_data" json:"qr_data"`
+}
+
+// GoogleUserInfo represents user info from Google OAuth
+type GoogleUserInfo struct {
+	ID            string `json:"id"`
+	Email         string `json:"email"`
+	VerifiedEmail bool   `json:"verified_email"`
+	Name          string `json:"name"`
+	GivenName     string `json:"given_name"`
+	FamilyName    string `json:"family_name"`
+	Picture       string `json:"picture"`
+	Locale        string `json:"locale"`
+	HD            string `json:"hd,omitempty"` // Hosted domain for G Suite users
 }
 
 // GetUser retrieves a user by username from the database
@@ -54,6 +73,34 @@ func GetUser(username string) (*models.User, error) {
 	permissions, err := GetUserPermissions(user.ID)
 	if err != nil {
 		log.Printf("Warning: failed to load permissions for user %s: %v", username, err)
+	} else {
+		user.Permissions = permissions
+	}
+
+	return user, nil
+}
+
+// GetUserByEmail retrieves a user by email from the database
+func GetUserByEmail(email string) (*models.User, error) {
+	user := &models.User{}
+	query := `SELECT id, username, password_hash, display_name, email, created_at, updated_at 
+			  FROM users WHERE email = ?`
+
+	err := database.DB.QueryRow(query, email).Scan(
+		&user.ID, &user.Username, &user.PasswordHash,
+		&user.DisplayName, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	// Load user permissions
+	permissions, err := GetUserPermissions(user.ID)
+	if err != nil {
+		log.Printf("Warning: failed to load permissions for user %s: %v", email, err)
 	} else {
 		user.Permissions = permissions
 	}
@@ -414,4 +461,173 @@ func RequirePermission(permission string) gin.HandlerFunc {
 		}
 		c.Next()
 	}
+}
+
+// GetOAuthSettings retrieves OAuth configuration from system settings
+func GetOAuthSettings() (map[string]string, error) {
+	query := `SELECT key, value FROM system_settings WHERE category = 'oauth'`
+	rows, err := database.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	settings := make(map[string]string)
+	for rows.Next() {
+		var key, value string
+		if err := rows.Scan(&key, &value); err != nil {
+			continue
+		}
+		settings[key] = value
+	}
+
+	return settings, nil
+}
+
+// GetGoogleOAuthConfig creates and returns Google OAuth2 configuration
+func GetGoogleOAuthConfig() (*oauth2.Config, error) {
+	settings, err := GetOAuthSettings()
+	if err != nil {
+		return nil, err
+	}
+
+	clientID, ok := settings["google_client_id"]
+	if !ok || clientID == "" {
+		return nil, ErrOAuthMisconfigured
+	}
+
+	clientSecret, ok := settings["google_client_secret"]
+	if !ok || clientSecret == "" {
+		return nil, ErrOAuthMisconfigured
+	}
+
+	redirectURL, ok := settings["google_redirect_url"]
+	if !ok || redirectURL == "" {
+		return nil, ErrOAuthMisconfigured
+	}
+
+	enabled, ok := settings["google_oauth_enabled"]
+	if !ok || enabled != "true" {
+		return nil, ErrOAuthDisabled
+	}
+
+	config := &oauth2.Config{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		RedirectURL:  redirectURL,
+		Scopes:       []string{"openid", "email", "profile"},
+		Endpoint:     google.Endpoint,
+	}
+
+	return config, nil
+}
+
+// GetGoogleUserInfo fetches user info from Google using access token
+func GetGoogleUserInfo(token *oauth2.Token) (*GoogleUserInfo, error) {
+	client := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(token))
+	
+	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get user info: status %d", resp.StatusCode)
+	}
+
+	var userInfo GoogleUserInfo
+	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
+		return nil, err
+	}
+
+	return &userInfo, nil
+}
+
+// CreateUserFromGoogleOAuth creates a new user from Google OAuth info with read-only permissions
+func CreateUserFromGoogleOAuth(userInfo *GoogleUserInfo) (*models.User, error) {
+	tx, err := database.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a unique username based on email
+	username := strings.Split(userInfo.Email, "@")[0]
+	// Check if username already exists and append suffix if needed
+	originalUsername := username
+	counter := 1
+	for {
+		var existingID int
+		query := `SELECT id FROM users WHERE username = ?`
+		err := database.DB.QueryRow(query, username).Scan(&existingID)
+		if err == sql.ErrNoRows {
+			break // Username is available
+		}
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		username = fmt.Sprintf("%s%d", originalUsername, counter)
+		counter++
+	}
+
+	// Insert new user with empty password hash (OAuth users don't use passwords)
+	userQuery := `INSERT INTO users (username, password_hash, display_name, email, created_at, updated_at) 
+				  VALUES (?, '', ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+	
+	result, err := tx.Exec(userQuery, username, userInfo.Name, userInfo.Email)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	userID, err := result.LastInsertId()
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Grant read-only permissions: only view access, no create/update/delete
+	readOnlyPermissions := []string{
+		"materiales.view",
+		"actividades.view",
+	}
+
+	for _, permission := range readOnlyPermissions {
+		permQuery := `INSERT INTO user_permissions (user_id, permission) VALUES (?, ?)`
+		_, err := tx.Exec(permQuery, userID, permission)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	// Return the newly created user
+	return GetUserByEmail(userInfo.Email)
+}
+
+// ValidateGoogleOAuthDomain checks if user's domain is allowed (if domain restriction is configured)
+func ValidateGoogleOAuthDomain(userInfo *GoogleUserInfo) error {
+	settings, err := GetOAuthSettings()
+	if err != nil {
+		return err
+	}
+
+	hostedDomain, ok := settings["google_hosted_domain"]
+	if !ok || hostedDomain == "" {
+		return nil // No domain restriction
+	}
+
+	// Extract domain from email
+	emailDomain := strings.Split(userInfo.Email, "@")[1]
+	
+	if hostedDomain != emailDomain {
+		return fmt.Errorf("domain %s is not allowed", emailDomain)
+	}
+
+	return nil
 }

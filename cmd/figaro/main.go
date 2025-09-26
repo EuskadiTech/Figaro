@@ -54,6 +54,8 @@ func main() {
 	// Routes that don't require authentication
 	router.GET("/login", h.Login)
 	router.POST("/login", h.Login)
+	router.GET("/auth/google", h.GoogleOAuthLogin)
+	router.GET("/auth/google/callback", h.GoogleOAuthCallback)
 	router.GET("/static/*filepath", h.Static)
 
 	// Routes that require authentication
@@ -108,6 +110,7 @@ func main() {
 		authGroup.GET("/admin/configuracion", h.AdminConfiguracion)
 		authGroup.POST("/admin/configuracion/general", h.AdminConfiguracionGeneral)
 		authGroup.POST("/admin/configuracion/security", h.AdminConfiguracionSecurity)
+		authGroup.POST("/admin/configuracion/oauth", h.AdminConfiguracionOAuth)
 		authGroup.POST("/admin/configuracion/email", h.AdminConfiguracionEmail)
 		authGroup.POST("/admin/configuracion/backup", h.AdminConfiguracionBackup)
 		authGroup.POST("/admin/configuracion/database", h.AdminConfiguracionDatabase)
