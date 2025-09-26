@@ -5,6 +5,7 @@
     "003_add_activity_urls.up.sql",
     "004_activity_sharing_and_links.up.sql",
     "005_add_activity_status_material_category.up.sql",
-    "006_add_user_default_center.up.sql"
+    "006_add_user_default_center.up.sql",
+    "007_system_settings.up.sql"
   ]
 }

@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -705,10 +707,281 @@ func (h *Handlers) AdminConfiguracion(c *gin.Context) {
 		return
 	}
 
+	// Get all system settings
+	settings, err := h.getAllSystemSettings()
+	if err != nil {
+		settings = make(map[string]map[string]string)
+	}
+
 	data := h.getCommonData(c)
 	data["PageTitle"] = "Figaró - Configuración del Sistema"
+	data["Settings"] = settings
+
+	// Handle success/error messages
+	if successMsg := c.Query("success"); successMsg != "" {
+		data["SuccessMessage"] = successMsg
+	}
+	if errorMsg := c.Query("error"); errorMsg != "" {
+		data["ErrorMessage"] = errorMsg
+	}
 
 	h.renderTemplate(c, "admin_configuracion.html", data)
+}
+
+// AdminConfiguracionGeneral handles general configuration form submission
+func (h *Handlers) AdminConfiguracionGeneral(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	// Get form values
+	appName := c.PostForm("app_name")
+	defaultTimezone := c.PostForm("default_timezone")
+	defaultLanguage := c.PostForm("default_language")
+	maintenanceMode := "false"
+	if c.PostForm("maintenance_mode") == "on" {
+		maintenanceMode = "true"
+	}
+
+	// Update settings
+	settings := map[string]string{
+		"app_name":         appName,
+		"default_timezone": defaultTimezone,
+		"default_language": defaultLanguage,
+		"maintenance_mode": maintenanceMode,
+	}
+
+	err := h.updateSystemSettings("general", settings)
+	if err != nil {
+		c.Redirect(http.StatusFound, "/admin/configuracion?error=Error al guardar la configuración: "+err.Error())
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/admin/configuracion?success=Configuración general guardada correctamente")
+}
+
+// AdminConfiguracionSecurity handles security configuration form submission
+func (h *Handlers) AdminConfiguracionSecurity(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	// Get form values
+	sessionTimeout := c.PostForm("session_timeout")
+	maxLoginAttempts := c.PostForm("max_login_attempts")
+	minPasswordLength := c.PostForm("min_password_length")
+	
+	requireUppercase := "false"
+	if c.PostForm("require_uppercase") == "on" {
+		requireUppercase = "true"
+	}
+	
+	requireNumbers := "false"
+	if c.PostForm("require_numbers") == "on" {
+		requireNumbers = "true"
+	}
+	
+	requireSpecial := "false"
+	if c.PostForm("require_special") == "on" {
+		requireSpecial = "true"
+	}
+
+	// Update settings
+	settings := map[string]string{
+		"session_timeout":      sessionTimeout,
+		"max_login_attempts":   maxLoginAttempts,
+		"require_uppercase":    requireUppercase,
+		"require_numbers":      requireNumbers,
+		"require_special":      requireSpecial,
+		"min_password_length":  minPasswordLength,
+	}
+
+	err := h.updateSystemSettings("security", settings)
+	if err != nil {
+		c.Redirect(http.StatusFound, "/admin/configuracion?error=Error al guardar la configuración de seguridad: "+err.Error())
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/admin/configuracion?success=Configuración de seguridad guardada correctamente")
+}
+
+// AdminConfiguracionEmail handles email configuration form submission
+func (h *Handlers) AdminConfiguracionEmail(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	// Get form values
+	smtpHost := c.PostForm("smtp_host")
+	smtpPort := c.PostForm("smtp_port")
+	smtpUsername := c.PostForm("smtp_username")
+	smtpPassword := c.PostForm("smtp_password")
+	smtpFromEmail := c.PostForm("smtp_from_email")
+	smtpFromName := c.PostForm("smtp_from_name")
+	smtpEncryption := c.PostForm("smtp_encryption")
+
+	// Update settings
+	settings := map[string]string{
+		"smtp_host":       smtpHost,
+		"smtp_port":       smtpPort,
+		"smtp_username":   smtpUsername,
+		"smtp_password":   smtpPassword,
+		"smtp_from_email": smtpFromEmail,
+		"smtp_from_name":  smtpFromName,
+		"smtp_encryption": smtpEncryption,
+	}
+
+	err := h.updateSystemSettings("email", settings)
+	if err != nil {
+		c.Redirect(http.StatusFound, "/admin/configuracion?error=Error al guardar la configuración de email: "+err.Error())
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/admin/configuracion?success=Configuración de email guardada correctamente")
+}
+
+// AdminConfiguracionBackup handles backup configuration form submission
+func (h *Handlers) AdminConfiguracionBackup(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	// Get form values
+	backupFrequency := c.PostForm("backup_frequency")
+	backupRetention := c.PostForm("backup_retention")
+	backupTime := c.PostForm("backup_time")
+	
+	backupEnabled := "false"
+	if c.PostForm("backup_enabled") == "on" {
+		backupEnabled = "true"
+	}
+
+	// Update settings
+	settings := map[string]string{
+		"backup_enabled":   backupEnabled,
+		"backup_frequency": backupFrequency,
+		"backup_retention": backupRetention,
+		"backup_time":      backupTime,
+	}
+
+	err := h.updateSystemSettings("backup", settings)
+	if err != nil {
+		c.Redirect(http.StatusFound, "/admin/configuracion?error=Error al guardar la configuración de respaldos: "+err.Error())
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/admin/configuracion?success=Configuración de respaldos guardada correctamente")
+}
+
+// AdminConfiguracionDatabase handles database operations
+func (h *Handlers) AdminConfiguracionDatabase(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	operation := c.PostForm("operation")
+
+	switch operation {
+	case "verify":
+		// Verify database integrity
+		err := h.verifyDatabaseIntegrity()
+		if err != nil {
+			c.Redirect(http.StatusFound, "/admin/configuracion?error=Error al verificar la base de datos: "+err.Error())
+			return
+		}
+		c.Redirect(http.StatusFound, "/admin/configuracion?success=Verificación de base de datos completada correctamente")
+	
+	case "optimize":
+		// Optimize database
+		err := h.optimizeDatabase()
+		if err != nil {
+			c.Redirect(http.StatusFound, "/admin/configuracion?error=Error al optimizar la base de datos: "+err.Error())
+			return
+		}
+		c.Redirect(http.StatusFound, "/admin/configuracion?success=Optimización de base de datos completada")
+	
+	case "backup":
+		// Create manual backup
+		err := h.createDatabaseBackup()
+		if err != nil {
+			c.Redirect(http.StatusFound, "/admin/configuracion?error=Error al crear respaldo: "+err.Error())
+			return
+		}
+		c.Redirect(http.StatusFound, "/admin/configuracion?success=Respaldo manual creado correctamente")
+	
+	default:
+		c.Redirect(http.StatusFound, "/admin/configuracion?error=Operación no válida")
+	}
+}
+
+// AdminConfiguracionLogs handles log viewing
+func (h *Handlers) AdminConfiguracionLogs(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	// Return recent log entries (for now just return sample data)
+	logs := []string{
+		"[" + time.Now().Format("2006-01-02 15:04:05") + "] INFO: Sistema iniciado correctamente",
+		"[" + time.Now().Add(-1*time.Minute).Format("2006-01-02 15:04:05") + "] INFO: Base de datos conectada",
+		"[" + time.Now().Add(-2*time.Minute).Format("2006-01-02 15:04:05") + "] INFO: Migraciones aplicadas",
+		"[" + time.Now().Add(-5*time.Minute).Format("2006-01-02 15:04:05") + "] INFO: Usuario admin autenticado",
+		"[" + time.Now().Add(-10*time.Minute).Format("2006-01-02 15:04:05") + "] INFO: Configuración cargada",
+	}
+
+	data := gin.H{
+		"logs": logs,
+	}
+
+	c.JSON(http.StatusOK, data)
 }
 
 // AdminFiles handles file management page
@@ -1210,4 +1483,97 @@ func (h *Handlers) updateCenter(centerID, name, timezone string) error {
 	query := `UPDATE centers SET name = ?, timezone = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
 	_, err := database.DB.Exec(query, name, timezone, centerID)
 	return err
+}
+
+// getAllSystemSettings retrieves all system settings grouped by category
+func (h *Handlers) getAllSystemSettings() (map[string]map[string]string, error) {
+	query := `SELECT key, value, category FROM system_settings ORDER BY category, key`
+	
+	rows, err := database.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	settings := make(map[string]map[string]string)
+	
+	for rows.Next() {
+		var key, value, category string
+		err := rows.Scan(&key, &value, &category)
+		if err != nil {
+			continue
+		}
+		
+		if settings[category] == nil {
+			settings[category] = make(map[string]string)
+		}
+		settings[category][key] = value
+	}
+
+	return settings, nil
+}
+
+// updateSystemSettings updates multiple settings in a category
+func (h *Handlers) updateSystemSettings(category string, settings map[string]string) error {
+	tx, err := database.DB.Begin()
+	if err != nil {
+		return err
+	}
+	
+	for key, value := range settings {
+		query := `UPDATE system_settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ? AND category = ?`
+		_, err := tx.Exec(query, value, key, category)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	
+	return tx.Commit()
+}
+
+// verifyDatabaseIntegrity checks database integrity
+func (h *Handlers) verifyDatabaseIntegrity() error {
+	// SQLite PRAGMA integrity_check
+	var result string
+	err := database.DB.QueryRow("PRAGMA integrity_check").Scan(&result)
+	if err != nil {
+		return err
+	}
+	
+	if result != "ok" {
+		return fmt.Errorf("database integrity check failed: %s", result)
+	}
+	
+	return nil
+}
+
+// optimizeDatabase optimizes the SQLite database
+func (h *Handlers) optimizeDatabase() error {
+	// Run VACUUM to optimize database
+	_, err := database.DB.Exec("VACUUM")
+	if err != nil {
+		return err
+	}
+	
+	// Run ANALYZE to update statistics
+	_, err = database.DB.Exec("ANALYZE")
+	return err
+}
+
+// createDatabaseBackup creates a backup of the database
+func (h *Handlers) createDatabaseBackup() error {
+	// For SQLite, we can simply copy the database file
+	// In a production environment, you might want to use SQLite backup API
+	dataDir := h.Config.DataDir
+	dbPath := h.Config.DatabasePath
+	backupPath := dataDir + "/backup_" + time.Now().Format("20060102_150405") + ".db"
+	
+	// Simple file copy for SQLite
+	sourceData, err := os.ReadFile(dbPath)
+	if err != nil {
+		return err
+	}
+	
+	return os.WriteFile(backupPath, sourceData, 0644)
 }

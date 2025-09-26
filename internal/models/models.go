@@ -257,3 +257,14 @@ func NewPaginationInfo(page, perPage, totalItems int) *PaginationInfo {
 		Offset:       offset,
 	}
 }
+
+// SystemSetting represents a system configuration setting
+type SystemSetting struct {
+	ID          int       `json:"id" db:"id"`
+	Key         string    `json:"key" db:"key"`
+	Value       string    `json:"value" db:"value"`
+	Category    string    `json:"category" db:"category"`
+	Description string    `json:"description" db:"description"`
+	CreatedAt   time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
+}

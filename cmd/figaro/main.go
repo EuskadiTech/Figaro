@@ -92,6 +92,12 @@ func main() {
 		authGroup.GET("/admin/actividades-report", h.AdminActividadesReport)
 		authGroup.GET("/admin/files", h.AdminFiles)
 		authGroup.GET("/admin/configuracion", h.AdminConfiguracion)
+		authGroup.POST("/admin/configuracion/general", h.AdminConfiguracionGeneral)
+		authGroup.POST("/admin/configuracion/security", h.AdminConfiguracionSecurity)
+		authGroup.POST("/admin/configuracion/email", h.AdminConfiguracionEmail)
+		authGroup.POST("/admin/configuracion/backup", h.AdminConfiguracionBackup)
+		authGroup.POST("/admin/configuracion/database", h.AdminConfiguracionDatabase)
+		authGroup.GET("/admin/configuracion/logs", h.AdminConfiguracionLogs)
 	}
 
 	// Start server
