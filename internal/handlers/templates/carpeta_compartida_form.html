@@ -88,7 +88,7 @@
                                         <option value="">-- Todos los centros (Global) --</option>
                                         {{range .Centers}}
                                         <option value="{{.ID}}" 
-                                                {{if $.FormData}}{{if eq (toString $.FormData.center_id) (toString .ID)}}selected{{end}}{{end}}>
+                                                {{if $.FormData}}{{if eq $.FormData.center_id .ID}}selected{{end}}{{end}}>
                                             {{.Name}}
                                         </option>
                                         {{end}}

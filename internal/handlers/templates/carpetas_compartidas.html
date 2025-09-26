@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Carpetas Compartidas</h1>
         <div>
-            {{if .HasPermission "ADMIN"}}
+            {{if call .HasAccess "ADMIN"}}
             <a href="/carpetas-compartidas/crear" class="btn btn-primary me-2">
                 <i class="fas fa-plus me-1"></i>
                 Nueva Carpeta
@@ -84,7 +84,7 @@
                                                     <i class="fas fa-folder-open"></i>
                                                 </button>
                                             {{end}}
-                                            {{if $.HasPermission "ADMIN"}}
+                                            {{if call $.HasAccess "ADMIN"}}
                                             <button class="btn btn-outline-danger btn-sm" onclick="deleteFolder('{{.ID}}', '{{.Name}}')">
                                                 <i class="fas fa-trash"></i>
                                             </button>
@@ -104,7 +104,7 @@
                         <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
                         <h5 class="text-muted">No hay carpetas compartidas disponibles</h5>
                         <p class="text-muted">Las carpetas compartidas aparecerán aquí una vez creadas.</p>
-                        {{if .HasPermission "ADMIN"}}
+                        {{if call .HasAccess "ADMIN"}}
                         <a href="/carpetas-compartidas/crear" class="btn btn-primary">
                             <i class="fas fa-plus me-1"></i>
                             Crear Primera Carpeta

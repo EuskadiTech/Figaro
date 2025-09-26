@@ -210,6 +210,14 @@ func (h *Handlers) handleSharedFolderCreate(c *gin.Context, centro string) {
 
 // getSharedFolders retrieves shared folders for a center and global ones
 func (h *Handlers) getSharedFolders(centro string) ([]models.SharedFolderWithCenter, error) {
+	// First, get the center ID from the center name
+	var centerID int
+	centerQuery := `SELECT id FROM centers WHERE name = ?`
+	err := database.DB.QueryRow(centerQuery, centro).Scan(&centerID)
+	if err != nil {
+		return nil, err
+	}
+
 	query := `
 		SELECT sf.id, sf.center_id, COALESCE(c.name, 'Global') as center_name, 
 		       sf.name, sf.description, sf.type, sf.cloud_url, sf.local_path, 
@@ -219,7 +227,7 @@ func (h *Handlers) getSharedFolders(centro string) ([]models.SharedFolderWithCen
 		WHERE (sf.center_id = ? OR sf.center_id IS NULL) AND sf.is_active = 1
 		ORDER BY sf.center_id IS NULL DESC, sf.created_at DESC`
 
-	rows, err := database.DB.Query(query, centro)
+	rows, err := database.DB.Query(query, centerID)
 	if err != nil {
 		return nil, err
 	}
