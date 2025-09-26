@@ -1647,6 +1647,205 @@ func (h *Handlers) AdminConfiguracion(c *gin.Context) {
 	h.renderTemplate(c, "admin_configuracion.html", data)
 }
 
+// AdminCentroAulas handles classroom management for a specific center
+func (h *Handlers) AdminCentroAulas(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	centerID := c.Param("center_id")
+	
+	// Get center information
+	center, err := h.getCenterByID(centerID)
+	if err != nil {
+		c.String(http.StatusNotFound, "Centro no encontrado")
+		return
+	}
+
+	// Get classrooms for this center
+	classrooms, err := h.getClassroomsByCenter(centerID)
+	if err != nil {
+		classrooms = []models.Classroom{} // Empty slice if error
+	}
+
+	data := h.getCommonData(c)
+	data["PageTitle"] = "Figaró - Aulas de " + center.Name
+	data["Center"] = center
+	data["Classrooms"] = classrooms
+
+	h.renderTemplate(c, "admin_aulas.html", data)
+}
+
+// AdminAulaCrear handles classroom creation
+func (h *Handlers) AdminAulaCrear(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	centerID := c.Param("center_id")
+	
+	// Get center information
+	center, err := h.getCenterByID(centerID)
+	if err != nil {
+		c.String(http.StatusNotFound, "Centro no encontrado")
+		return
+	}
+
+	if c.Request.Method == "POST" {
+		// Handle form submission
+		name := c.PostForm("nombre")
+		if name == "" {
+			data := h.getCommonData(c)
+			data["PageTitle"] = "Figaró - Crear Aula"
+			data["Center"] = center
+			data["ErrorMessage"] = "El nombre del aula es obligatorio"
+			data["FormData"] = map[string]string{"nombre": name}
+			h.renderTemplate(c, "admin_aula_form.html", data)
+			return
+		}
+
+		// Create classroom
+		err := h.createClassroom(centerID, name)
+		if err != nil {
+			data := h.getCommonData(c)
+			data["PageTitle"] = "Figaró - Crear Aula"
+			data["Center"] = center
+			data["ErrorMessage"] = "Error al crear el aula: " + err.Error()
+			data["FormData"] = map[string]string{"nombre": name}
+			h.renderTemplate(c, "admin_aula_form.html", data)
+			return
+		}
+
+		c.Redirect(http.StatusFound, "/admin/centros/aulas/"+centerID)
+		return
+	}
+
+	// Show form
+	data := h.getCommonData(c)
+	data["PageTitle"] = "Figaró - Crear Aula"
+	data["Center"] = center
+	data["Action"] = "crear"
+
+	h.renderTemplate(c, "admin_aula_form.html", data)
+}
+
+// AdminAulaEditar handles classroom editing
+func (h *Handlers) AdminAulaEditar(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	centerID := c.Param("center_id")
+	aulaID := c.Param("aula_id")
+	
+	// Get center information
+	center, err := h.getCenterByID(centerID)
+	if err != nil {
+		c.String(http.StatusNotFound, "Centro no encontrado")
+		return
+	}
+
+	// Get classroom information
+	classroom, err := h.getClassroomByID(aulaID)
+	if err != nil {
+		c.String(http.StatusNotFound, "Aula no encontrada")
+		return
+	}
+
+	if c.Request.Method == "POST" {
+		// Handle form submission
+		name := c.PostForm("nombre")
+		if name == "" {
+			data := h.getCommonData(c)
+			data["PageTitle"] = "Figaró - Editar Aula"
+			data["Center"] = center
+			data["Classroom"] = classroom
+			data["ErrorMessage"] = "El nombre del aula es obligatorio"
+			data["FormData"] = map[string]string{"nombre": name}
+			data["Action"] = "editar"
+			h.renderTemplate(c, "admin_aula_form.html", data)
+			return
+		}
+
+		// Update classroom
+		err := h.updateClassroom(aulaID, name)
+		if err != nil {
+			data := h.getCommonData(c)
+			data["PageTitle"] = "Figaró - Editar Aula"
+			data["Center"] = center
+			data["Classroom"] = classroom
+			data["ErrorMessage"] = "Error al actualizar el aula: " + err.Error()
+			data["FormData"] = map[string]string{"nombre": name}
+			data["Action"] = "editar"
+			h.renderTemplate(c, "admin_aula_form.html", data)
+			return
+		}
+
+		c.Redirect(http.StatusFound, "/admin/centros/aulas/"+centerID)
+		return
+	}
+
+	// Show form
+	data := h.getCommonData(c)
+	data["PageTitle"] = "Figaró - Editar Aula"
+	data["Center"] = center
+	data["Classroom"] = classroom
+	data["Action"] = "editar"
+
+	h.renderTemplate(c, "admin_aula_form.html", data)
+}
+
+// AdminAulaEliminar handles classroom deletion
+func (h *Handlers) AdminAulaEliminar(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	centerID := c.Param("center_id")
+	aulaID := c.Param("aula_id")
+
+	// Delete classroom
+	err := h.deleteClassroom(aulaID)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error al eliminar el aula: "+err.Error())
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/admin/centros/aulas/"+centerID)
+}
+
 // Helper functions for admin module
 func (h *Handlers) getAllUsers() ([]models.User, error) {
 	query := `SELECT id, username, display_name, email, created_at, updated_at FROM users ORDER BY username`
@@ -1831,6 +2030,70 @@ func (h *Handlers) calculateActivityStats() models.ActivityStats {
 	database.DB.QueryRow("SELECT COUNT(*) FROM activities WHERE end_datetime < ?", now).Scan(&stats.CompletedActivities)
 	
 	return stats
+}
+
+// getCenterByID gets a center by ID
+func (h *Handlers) getCenterByID(centerID string) (models.Center, error) {
+	var center models.Center
+	query := `SELECT id, name, timezone, created_at, updated_at FROM centers WHERE id = ?`
+	
+	err := database.DB.QueryRow(query, centerID).Scan(
+		&center.ID, &center.Name, &center.Timezone, &center.CreatedAt, &center.UpdatedAt)
+	return center, err
+}
+
+// getClassroomsByCenter gets all classrooms for a center
+func (h *Handlers) getClassroomsByCenter(centerID string) ([]models.Classroom, error) {
+	query := `SELECT id, center_id, name, created_at, updated_at FROM classrooms WHERE center_id = ? ORDER BY name`
+	
+	rows, err := database.DB.Query(query, centerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var classrooms []models.Classroom
+	for rows.Next() {
+		var classroom models.Classroom
+		err := rows.Scan(&classroom.ID, &classroom.CenterID, &classroom.Name, &classroom.CreatedAt, &classroom.UpdatedAt)
+		if err != nil {
+			continue
+		}
+		classrooms = append(classrooms, classroom)
+	}
+
+	return classrooms, nil
+}
+
+// getClassroomByID gets a classroom by ID
+func (h *Handlers) getClassroomByID(classroomID string) (models.Classroom, error) {
+	var classroom models.Classroom
+	query := `SELECT id, center_id, name, created_at, updated_at FROM classrooms WHERE id = ?`
+	
+	err := database.DB.QueryRow(query, classroomID).Scan(
+		&classroom.ID, &classroom.CenterID, &classroom.Name, &classroom.CreatedAt, &classroom.UpdatedAt)
+	return classroom, err
+}
+
+// createClassroom creates a new classroom
+func (h *Handlers) createClassroom(centerID, name string) error {
+	query := `INSERT INTO classrooms (center_id, name, created_at, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+	_, err := database.DB.Exec(query, centerID, name)
+	return err
+}
+
+// updateClassroom updates a classroom
+func (h *Handlers) updateClassroom(classroomID, name string) error {
+	query := `UPDATE classrooms SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+	_, err := database.DB.Exec(query, name, classroomID)
+	return err
+}
+
+// deleteClassroom deletes a classroom
+func (h *Handlers) deleteClassroom(classroomID string) error {
+	query := `DELETE FROM classrooms WHERE id = ?`
+	_, err := database.DB.Exec(query, classroomID)
+	return err
 }
 
 // Static serves static files from embedded filesystem
