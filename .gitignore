@@ -193,10 +193,5 @@ cython_debug/
 # Testing files
 cookies.txt
 
-# Runtime data directory contents (keep structure, exclude runtime data)
-data/figaro.db*
-data/migrations.json
-data/uploads/
-data/Actividades/
-data/Centros/
-data/Usuarios/
+# Runtime data directory contents
+data/
