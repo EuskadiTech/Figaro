@@ -833,6 +833,62 @@ func (h *Handlers) AdminConfiguracionSecurity(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/admin/configuracion?success=Configuración de seguridad guardada correctamente")
 }
 
+// AdminConfiguracionOAuth handles OAuth configuration form submission
+func (h *Handlers) AdminConfiguracionOAuth(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	// Get form values
+	googleClientID := c.PostForm("google_client_id")
+	googleClientSecret := c.PostForm("google_client_secret")
+	googleRedirectURL := c.PostForm("google_redirect_url")
+	googleHostedDomain := c.PostForm("google_hosted_domain")
+	googleOAuthEnabled := "false"
+	if c.PostForm("google_oauth_enabled") == "on" {
+		googleOAuthEnabled = "true"
+	}
+
+	settings := map[string]string{
+		"google_oauth_enabled": googleOAuthEnabled,
+		"google_client_id":     googleClientID,
+		"google_redirect_url":  googleRedirectURL,
+		"google_hosted_domain": googleHostedDomain,
+	}
+
+	// Only update client secret if a new one is provided (not empty)
+	if googleClientSecret != "" {
+		settings["google_client_secret"] = googleClientSecret
+	}
+
+	err := h.updateSystemSettings("oauth", settings)
+	if err != nil {
+		logger.ErrorWithContext("admin", fmt.Sprintf("%d", user.ID), c.ClientIP(), 
+			fmt.Sprintf("User '%s' failed to update OAuth configuration", user.Username), gin.H{
+				"settings": settings,
+				"error": err.Error(),
+			})
+		c.Redirect(http.StatusFound, "/admin/configuracion?error=Error al guardar la configuración OAuth: "+err.Error())
+		return
+	}
+
+	// Log successful configuration change
+	logger.InfoWithContext("admin", fmt.Sprintf("%d", user.ID), c.ClientIP(), 
+		fmt.Sprintf("User '%s' updated OAuth configuration", user.Username), gin.H{
+			"oauth_enabled": googleOAuthEnabled,
+		})
+
+	c.Redirect(http.StatusFound, "/admin/configuracion?success=Configuración OAuth guardada correctamente")
+}
+
 // AdminConfiguracionEmail handles email configuration form submission
 func (h *Handlers) AdminConfiguracionEmail(c *gin.Context) {
 	user := auth.GetCurrentUser(c)

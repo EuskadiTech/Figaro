@@ -39,6 +39,10 @@
                     <i class="fas fa-shield-alt me-2"></i>
                     Seguridad
                 </a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#oauth">
+                    <i class="fab fa-google me-2"></i>
+                    Autenticación OAuth
+                </a>
                 <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#email">
                     <i class="fas fa-envelope me-2"></i>
                     Email
@@ -220,6 +224,85 @@
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-save me-1"></i>
                                     Guardar Configuración de Seguridad
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OAuth Configuration -->
+                <div class="tab-pane fade" id="oauth">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fab fa-google me-2"></i>
+                                Configuración de Autenticación OAuth (Google)
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Para configurar Google OAuth, necesitas crear un proyecto en <strong>Google Cloud Console</strong> y obtener las credenciales OAuth2.
+                                Los usuarios podrán iniciar sesión con sus cuentas de Google y se crearán automáticamente con permisos de solo lectura.
+                            </div>
+                            <form method="POST" action="/admin/configuracion/oauth">
+                                <div class="mb-3">
+                                    <label for="google_oauth_enabled" class="form-label">Google OAuth</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="google_oauth_enabled" name="google_oauth_enabled" {{if and .Settings.oauth (eq .Settings.oauth.google_oauth_enabled "true")}}checked{{end}}>
+                                        <label class="form-check-label" for="google_oauth_enabled">
+                                            Habilitar login con Google
+                                        </label>
+                                    </div>
+                                    <div class="form-text">Permite a los usuarios iniciar sesión con sus cuentas de Google</div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="google_client_id" class="form-label">Client ID de Google</label>
+                                        <input type="text" class="form-control" id="google_client_id" name="google_client_id" value="{{if .Settings.oauth}}{{.Settings.oauth.google_client_id}}{{end}}" placeholder="123456789.apps.googleusercontent.com">
+                                        <div class="form-text">Obténlo del Google Cloud Console</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="google_client_secret" class="form-label">Client Secret de Google</label>
+                                        <input type="password" class="form-control" id="google_client_secret" name="google_client_secret" placeholder="{{if and .Settings.oauth .Settings.oauth.google_client_secret}}••••••••••••••••••••{{else}}Client Secret{{end}}">
+                                        <div class="form-text">Secreto cliente de Google OAuth</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="google_redirect_url" class="form-label">URL de Redirección</label>
+                                    <input type="url" class="form-control" id="google_redirect_url" name="google_redirect_url" value="{{if .Settings.oauth}}{{.Settings.oauth.google_redirect_url}}{{end}}" placeholder="https://tu-dominio.com/auth/google/callback">
+                                    <div class="form-text">
+                                        Esta URL debe estar registrada en Google Cloud Console. 
+                                        <strong>Formato recomendado:</strong> https://tu-dominio.com/auth/google/callback
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="google_hosted_domain" class="form-label">Dominio Restringido (Opcional)</label>
+                                    <input type="text" class="form-control" id="google_hosted_domain" name="google_hosted_domain" value="{{if .Settings.oauth}}{{.Settings.oauth.google_hosted_domain}}{{end}}" placeholder="ejemplo.com">
+                                    <div class="form-text">
+                                        Opcional: Solo permitir usuarios de un dominio específico (ej: empresa.com). 
+                                        Déjalo vacío para permitir cualquier cuenta de Google.
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-warning">
+                                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Configuración en Google Cloud Console:</h6>
+                                    <ol class="mb-0">
+                                        <li>Ve a <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a></li>
+                                        <li>Crea un proyecto o selecciona uno existente</li>
+                                        <li>Habilita la API de Google+ o Google Identity</li>
+                                        <li>Ve a "Credenciales" y crea credenciales OAuth 2.0</li>
+                                        <li>Añade la URL de redirección configurada arriba</li>
+                                        <li>Copia el Client ID y Client Secret aquí</li>
+                                    </ol>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>
+                                    Guardar Configuración OAuth
                                 </button>
                             </form>
                         </div>

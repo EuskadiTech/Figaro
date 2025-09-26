@@ -89,6 +89,20 @@
 
                     <hr class="my-4">
 
+                    <!-- Google OAuth Login (if enabled) -->
+                    {{if .OAuthEnabled}}
+                    <div class="d-grid mb-3">
+                        <a href="/auth/google" class="btn btn-outline-danger">
+                            <i class="fab fa-google me-2"></i>
+                            Iniciar Sesión con Google
+                        </a>
+                    </div>
+                    
+                    <div class="text-center mb-3">
+                        <small class="text-muted">o</small>
+                    </div>
+                    {{end}}
+
                     <!-- QR Code Login Form -->
                     <form method="POST" action="/login" id="qr-login-form">
                         <div class="mb-3">
