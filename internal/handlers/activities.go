@@ -83,8 +83,7 @@ func (h *Handlers) getActivities(centro string, searchQuery string, showPast boo
 	} else {
 		query = `SELECT id, center_id, title, description, start_datetime, end_datetime, is_global, status, meeting_url, web_url, created_at, updated_at 
 				FROM activities WHERE (center_id = (SELECT id FROM centers WHERE name = ?) OR is_global = 1) 
-				AND start_datetime <= datetime('now')
-				AND end_datetime   >= datetime('now')`
+				AND start_datetime > datetime('now', 'start of day')`
 		args = []interface{}{centro}
 	}
 
@@ -145,8 +144,7 @@ func (h *Handlers) getActivitiesPaginated(centro string, searchQuery string, sho
 		args = []interface{}{centro}
 	} else {
 		baseQuery = `FROM activities WHERE (center_id = (SELECT id FROM centers WHERE name = ?) OR is_global = 1) 
-				AND start_datetime <= datetime('now', 'start of day', '+1 day', '-1 second')
-				AND end_datetime   >= datetime('now', 'start of day')`
+				AND start_datetime > datetime('now', 'start of day')`
 		args = []interface{}{centro}
 	}
 
@@ -604,7 +602,7 @@ func (h *Handlers) getSharedActivities(centro string, searchQuery string, showPa
 				 INNER JOIN activity_shares ast ON a.id = ast.activity_id
 				 INNER JOIN centers c_current ON ast.center_id = c_current.id
 				 INNER JOIN centers c_shared ON ast.shared_by_center_id = c_shared.id
-				 WHERE c_current.name = ? AND a.start_datetime >= datetime('now')`
+				 WHERE c_current.name = ? AND a.start_datetime > datetime('now', 'start of day')`
 		args = []interface{}{centro}
 	}
 
@@ -678,7 +676,7 @@ func (h *Handlers) getActivitiesWithCustomLinks(centro string, searchQuery strin
 				 FROM activities a
 				 INNER JOIN activity_custom_links acl ON a.id = acl.activity_id
 				 WHERE (a.center_id = (SELECT id FROM centers WHERE name = ?) OR a.is_global = 1)
-				 AND a.start_datetime >= datetime('now')`
+				 AND a.start_datetime > datetime('now', 'start of day')`
 		args = []interface{}{centro}
 	}
 
