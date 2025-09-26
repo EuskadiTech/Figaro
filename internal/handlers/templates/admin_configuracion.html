@@ -8,6 +8,22 @@
         </a>
     </div>
 
+    <!-- Success/Error Messages -->
+    {{if .SuccessMessage}}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        {{.SuccessMessage}}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {{end}}
+    {{if .ErrorMessage}}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        {{.ErrorMessage}}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {{end}}
+
     <div class="row">
         <div class="col-md-3">
             <div class="list-group" id="config-tabs">
@@ -53,35 +69,35 @@
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="app_name" class="form-label">Nombre de la Aplicación</label>
-                                        <input type="text" class="form-control" id="app_name" name="app_name" value="Figaró">
+                                        <input type="text" class="form-control" id="app_name" name="app_name" value="{{if .Settings.general}}{{.Settings.general.app_name}}{{else}}Figaró{{end}}">
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="app_version" class="form-label">Versión</label>
-                                        <input type="text" class="form-control" id="app_version" name="app_version" value="2.0.0" readonly>
+                                        <input type="text" class="form-control" id="app_version" name="app_version" value="{{if .Settings.general}}{{.Settings.general.app_version}}{{else}}2.0.0{{end}}" readonly>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="default_timezone" class="form-label">Zona Horaria Predeterminada</label>
                                         <select class="form-select" id="default_timezone" name="default_timezone">
-                                            <option value="Europe/Madrid" selected>Europe/Madrid</option>
-                                            <option value="UTC">UTC</option>
-                                            <option value="America/New_York">America/New_York</option>
+                                            <option value="Europe/Madrid" {{if and .Settings.general (eq .Settings.general.default_timezone "Europe/Madrid")}}selected{{end}}>Europe/Madrid</option>
+                                            <option value="UTC" {{if and .Settings.general (eq .Settings.general.default_timezone "UTC")}}selected{{end}}>UTC</option>
+                                            <option value="America/New_York" {{if and .Settings.general (eq .Settings.general.default_timezone "America/New_York")}}selected{{end}}>America/New_York</option>
                                         </select>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="default_language" class="form-label">Idioma Predeterminado</label>
                                         <select class="form-select" id="default_language" name="default_language">
-                                            <option value="es" selected>Español</option>
-                                            <option value="en">English</option>
-                                            <option value="fr">Français</option>
+                                            <option value="es" {{if and .Settings.general (eq .Settings.general.default_language "es")}}selected{{else if not .Settings.general}}selected{{end}}>Español</option>
+                                            <option value="en" {{if and .Settings.general (eq .Settings.general.default_language "en")}}selected{{end}}>English</option>
+                                            <option value="fr" {{if and .Settings.general (eq .Settings.general.default_language "fr")}}selected{{end}}>Français</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="maintenance_mode" class="form-label">Modo Mantenimiento</label>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="maintenance_mode" name="maintenance_mode">
+                                        <input class="form-check-input" type="checkbox" id="maintenance_mode" name="maintenance_mode" {{if and .Settings.general (eq .Settings.general.maintenance_mode "true")}}checked{{end}}>
                                         <label class="form-check-label" for="maintenance_mode">
                                             Activar modo mantenimiento
                                         </label>
@@ -127,18 +143,27 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="d-grid gap-2">
-                                        <button class="btn btn-outline-primary" type="button">
-                                            <i class="fas fa-sync me-1"></i>
-                                            Verificar Integridad
-                                        </button>
-                                        <button class="btn btn-outline-warning" type="button">
-                                            <i class="fas fa-tools me-1"></i>
-                                            Optimizar Base de Datos
-                                        </button>
-                                        <button class="btn btn-outline-info" type="button">
-                                            <i class="fas fa-download me-1"></i>
-                                            Crear Respaldo Manual
-                                        </button>
+                                        <form method="POST" action="/admin/configuracion/database" style="display: inline;">
+                                            <input type="hidden" name="operation" value="verify">
+                                            <button class="btn btn-outline-primary w-100" type="submit">
+                                                <i class="fas fa-sync me-1"></i>
+                                                Verificar Integridad
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="/admin/configuracion/database" style="display: inline;">
+                                            <input type="hidden" name="operation" value="optimize">
+                                            <button class="btn btn-outline-warning w-100" type="submit">
+                                                <i class="fas fa-tools me-1"></i>
+                                                Optimizar Base de Datos
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="/admin/configuracion/database" style="display: inline;">
+                                            <input type="hidden" name="operation" value="backup">
+                                            <button class="btn btn-outline-info w-100" type="submit">
+                                                <i class="fas fa-download me-1"></i>
+                                                Crear Respaldo Manual
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
@@ -160,29 +185,29 @@
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="session_timeout" class="form-label">Tiempo de Sesión (minutos)</label>
-                                        <input type="number" class="form-control" id="session_timeout" name="session_timeout" value="30" min="5" max="480">
+                                        <input type="number" class="form-control" id="session_timeout" name="session_timeout" value="{{if .Settings.security}}{{.Settings.security.session_timeout}}{{else}}30{{end}}" min="5" max="480">
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="max_login_attempts" class="form-label">Máximo Intentos de Login</label>
-                                        <input type="number" class="form-control" id="max_login_attempts" name="max_login_attempts" value="5" min="3" max="10">
+                                        <input type="number" class="form-control" id="max_login_attempts" name="max_login_attempts" value="{{if .Settings.security}}{{.Settings.security.max_login_attempts}}{{else}}5{{end}}" min="3" max="10">
                                     </div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="password_policy" class="form-label">Política de Contraseñas</label>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="require_uppercase" name="require_uppercase" checked>
+                                        <input class="form-check-input" type="checkbox" id="require_uppercase" name="require_uppercase" {{if and .Settings.security (eq .Settings.security.require_uppercase "true")}}checked{{else if not .Settings.security}}checked{{end}}>
                                         <label class="form-check-label" for="require_uppercase">
                                             Requerir al menos una mayúscula
                                         </label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="require_numbers" name="require_numbers" checked>
+                                        <input class="form-check-input" type="checkbox" id="require_numbers" name="require_numbers" {{if and .Settings.security (eq .Settings.security.require_numbers "true")}}checked{{else if not .Settings.security}}checked{{end}}>
                                         <label class="form-check-label" for="require_numbers">
                                             Requerir al menos un número
                                         </label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="require_special" name="require_special">
+                                        <input class="form-check-input" type="checkbox" id="require_special" name="require_special" {{if and .Settings.security (eq .Settings.security.require_special "true")}}checked{{end}}>
                                         <label class="form-check-label" for="require_special">
                                             Requerir caracteres especiales
                                         </label>
@@ -190,7 +215,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="min_password_length" class="form-label">Longitud mínima contraseña</label>
-                                    <input type="number" class="form-control" id="min_password_length" name="min_password_length" value="8" min="6" max="20" style="max-width: 100px;">
+                                    <input type="number" class="form-control" id="min_password_length" name="min_password_length" value="{{if .Settings.security}}{{.Settings.security.min_password_length}}{{else}}8{{end}}" min="6" max="20" style="max-width: 100px;">
                                 </div>
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-save me-1"></i>
@@ -211,32 +236,46 @@
                             </h5>
                         </div>
                         <div class="card-body">
-                            <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                La funcionalidad de email está en desarrollo y no está disponible actualmente.
-                            </div>
-                            <form>
+                            <form method="POST" action="/admin/configuracion/email">
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="smtp_host" class="form-label">Servidor SMTP</label>
-                                        <input type="text" class="form-control" id="smtp_host" name="smtp_host" placeholder="smtp.gmail.com" disabled>
+                                        <input type="text" class="form-control" id="smtp_host" name="smtp_host" value="{{if .Settings.email}}{{.Settings.email.smtp_host}}{{end}}" placeholder="smtp.gmail.com">
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="smtp_port" class="form-label">Puerto SMTP</label>
-                                        <input type="number" class="form-control" id="smtp_port" name="smtp_port" value="587" disabled>
+                                        <input type="number" class="form-control" id="smtp_port" name="smtp_port" value="{{if .Settings.email}}{{.Settings.email.smtp_port}}{{else}}587{{end}}">
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="smtp_username" class="form-label">Usuario SMTP</label>
-                                        <input type="email" class="form-control" id="smtp_username" name="smtp_username" disabled>
+                                        <input type="email" class="form-control" id="smtp_username" name="smtp_username" value="{{if .Settings.email}}{{.Settings.email.smtp_username}}{{end}}">
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="smtp_password" class="form-label">Contraseña SMTP</label>
-                                        <input type="password" class="form-control" id="smtp_password" name="smtp_password" disabled>
+                                        <input type="password" class="form-control" id="smtp_password" name="smtp_password" placeholder="{{if and .Settings.email .Settings.email.smtp_password}}••••••••{{else}}Ingresa contraseña{{end}}">
                                     </div>
                                 </div>
-                                <button type="submit" class="btn btn-primary" disabled>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="smtp_from_email" class="form-label">Email Remitente</label>
+                                        <input type="email" class="form-control" id="smtp_from_email" name="smtp_from_email" value="{{if .Settings.email}}{{.Settings.email.smtp_from_email}}{{end}}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="smtp_from_name" class="form-label">Nombre Remitente</label>
+                                        <input type="text" class="form-control" id="smtp_from_name" name="smtp_from_name" value="{{if .Settings.email}}{{.Settings.email.smtp_from_name}}{{else}}Figaró{{end}}">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="smtp_encryption" class="form-label">Cifrado</label>
+                                    <select class="form-select" id="smtp_encryption" name="smtp_encryption">
+                                        <option value="tls" {{if and .Settings.email (eq .Settings.email.smtp_encryption "tls")}}selected{{else if not .Settings.email}}selected{{end}}>TLS</option>
+                                        <option value="ssl" {{if and .Settings.email (eq .Settings.email.smtp_encryption "ssl")}}selected{{end}}>SSL</option>
+                                        <option value="none" {{if and .Settings.email (eq .Settings.email.smtp_encryption "none")}}selected{{end}}>Sin cifrado</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-save me-1"></i>
                                     Guardar Configuración de Email
                                 </button>
@@ -259,10 +298,10 @@
                                 <div class="col-md-6">
                                     <form method="POST" action="/admin/configuracion/backup">
                                         <div class="mb-3">
-                                            <label for="auto_backup" class="form-label">Respaldo Automático</label>
+                                            <label for="backup_enabled" class="form-label">Respaldo Automático</label>
                                             <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" id="auto_backup" name="auto_backup" checked>
-                                                <label class="form-check-label" for="auto_backup">
+                                                <input class="form-check-input" type="checkbox" id="backup_enabled" name="backup_enabled" {{if and .Settings.backup (eq .Settings.backup.backup_enabled "true")}}checked{{else if not .Settings.backup}}checked{{end}}>
+                                                <label class="form-check-label" for="backup_enabled">
                                                     Activar respaldos automáticos
                                                 </label>
                                             </div>
@@ -270,14 +309,18 @@
                                         <div class="mb-3">
                                             <label for="backup_frequency" class="form-label">Frecuencia</label>
                                             <select class="form-select" id="backup_frequency" name="backup_frequency">
-                                                <option value="daily" selected>Diario</option>
-                                                <option value="weekly">Semanal</option>
-                                                <option value="monthly">Mensual</option>
+                                                <option value="daily" {{if and .Settings.backup (eq .Settings.backup.backup_frequency "daily")}}selected{{else if not .Settings.backup}}selected{{end}}>Diario</option>
+                                                <option value="weekly" {{if and .Settings.backup (eq .Settings.backup.backup_frequency "weekly")}}selected{{end}}>Semanal</option>
+                                                <option value="monthly" {{if and .Settings.backup (eq .Settings.backup.backup_frequency "monthly")}}selected{{end}}>Mensual</option>
                                             </select>
                                         </div>
                                         <div class="mb-3">
                                             <label for="backup_retention" class="form-label">Retención (días)</label>
-                                            <input type="number" class="form-control" id="backup_retention" name="backup_retention" value="30" min="7" max="365">
+                                            <input type="number" class="form-control" id="backup_retention" name="backup_retention" value="{{if .Settings.backup}}{{.Settings.backup.backup_retention}}{{else}}30{{end}}" min="7" max="365">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="backup_time" class="form-label">Hora de Respaldo</label>
+                                            <input type="time" class="form-control" id="backup_time" name="backup_time" value="{{if .Settings.backup}}{{.Settings.backup.backup_time}}{{else}}02:00{{end}}">
                                         </div>
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-save me-1"></i>
@@ -328,23 +371,27 @@
                         </div>
                         <div class="card-body">
                             <div class="row mb-3">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <select class="form-select" id="log_level">
-                                        <option value="all">Todos los niveles</option>
+                                        <option value="">Todos los niveles</option>
                                         <option value="error">Solo errores</option>
                                         <option value="warning">Advertencias</option>
                                         <option value="info">Información</option>
+                                        <option value="debug">Depuración</option>
                                     </select>
                                 </div>
-                                <div class="col-md-4">
-                                    <input type="date" class="form-control" id="log_date" value="2024-12-15">
+                                <div class="col-md-3">
+                                    <input type="date" class="form-control" id="log_date">
                                 </div>
-                                <div class="col-md-4">
-                                    <button class="btn btn-outline-primary">
+                                <div class="col-md-3">
+                                    <input type="number" class="form-control" id="log_limit" placeholder="Límite" value="100" min="10" max="1000">
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-outline-primary" id="refresh_logs">
                                         <i class="fas fa-sync me-1"></i>
                                         Actualizar
                                     </button>
-                                    <button class="btn btn-outline-secondary">
+                                    <button class="btn btn-outline-secondary ms-1" id="download_logs">
                                         <i class="fas fa-download me-1"></i>
                                         Descargar
                                     </button>
@@ -352,17 +399,11 @@
                             </div>
                             <div class="card">
                                 <div class="card-body p-0">
-                                    <div style="height: 400px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px; background-color: #f8f9fa; padding: 15px;">
-                                        <div class="text-success">[2024-12-15 10:30:45] INFO: Sistema iniciado correctamente</div>
-                                        <div class="text-info">[2024-12-15 10:30:46] INFO: Base de datos conectada</div>
-                                        <div class="text-info">[2024-12-15 10:31:02] INFO: Usuario 'admin' inició sesión desde 192.168.1.100</div>
-                                        <div class="text-warning">[2024-12-15 10:35:15] WARN: Intento de acceso fallido para usuario 'test'</div>
-                                        <div class="text-info">[2024-12-15 10:40:22] INFO: Nuevo centro creado: 'Centro Educativo A'</div>
-                                        <div class="text-info">[2024-12-15 10:45:08] INFO: Nuevo usuario creado: 'profesor1'</div>
-                                        <div class="text-success">[2024-12-15 11:00:00] INFO: Respaldo automático completado</div>
-                                        <div class="text-danger">[2024-12-15 11:15:33] ERROR: Error temporal de conexión a la base de datos</div>
-                                        <div class="text-success">[2024-12-15 11:15:34] INFO: Conexión a la base de datos restaurada</div>
-                                        <div class="text-info">[2024-12-15 11:30:15] INFO: Usuario 'profesor1' inició sesión desde 192.168.1.105</div>
+                                    <div id="logs_container" style="height: 400px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px; background-color: #f8f9fa; padding: 15px;">
+                                        <div class="text-center text-muted py-4">
+                                            <i class="fas fa-spinner fa-spin me-2"></i>
+                                            Cargando registros...
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -373,4 +414,101 @@
         </div>
     </div>
 </div>
+
+<script>
+// Load logs when the page loads or when filters change
+function loadLogs() {
+    const level = document.getElementById('log_level').value;
+    const date = document.getElementById('log_date').value;
+    const limit = document.getElementById('log_limit').value || '100';
+    
+    const params = new URLSearchParams();
+    if (level) params.append('level', level);
+    if (date) params.append('date', date);
+    params.append('limit', limit);
+    
+    const container = document.getElementById('logs_container');
+    container.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin me-2"></i>Cargando registros...</div>';
+    
+    fetch(`/admin/configuracion/logs?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.logs && data.logs.length > 0) {
+                let html = '';
+                data.logs.forEach(log => {
+                    const levelClass = getLevelClass(log.level);
+                    const extraInfo = log.module || log.user_id || log.ip ? 
+                        ` <small class="text-muted">[${[log.module, log.user_id, log.ip].filter(x => x).join(', ')}]</small>` : '';
+                    html += `<div class="${levelClass}">[${log.timestamp}] ${log.level}: ${log.message}${extraInfo}</div>`;
+                });
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = '<div class="text-center text-muted py-4">No se encontraron registros para los filtros seleccionados.</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading logs:', error);
+            container.innerHTML = '<div class="text-center text-danger py-4"><i class="fas fa-exclamation-triangle me-2"></i>Error al cargar los registros.</div>';
+        });
+}
+
+function getLevelClass(level) {
+    switch (level) {
+        case 'ERROR':
+            return 'text-danger';
+        case 'WARN':
+            return 'text-warning';
+        case 'INFO':
+            return 'text-info';
+        case 'DEBUG':
+            return 'text-secondary';
+        default:
+            return '';
+    }
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Load logs when page loads
+    loadLogs();
+    
+    // Set today's date as default
+    document.getElementById('log_date').value = new Date().toISOString().split('T')[0];
+    
+    // Refresh button
+    document.getElementById('refresh_logs').addEventListener('click', loadLogs);
+    
+    // Auto-refresh when filters change
+    document.getElementById('log_level').addEventListener('change', loadLogs);
+    document.getElementById('log_date').addEventListener('change', loadLogs);
+    document.getElementById('log_limit').addEventListener('change', loadLogs);
+    
+    // Download logs functionality
+    document.getElementById('download_logs').addEventListener('click', function() {
+        const level = document.getElementById('log_level').value;
+        const date = document.getElementById('log_date').value;
+        const limit = document.getElementById('log_limit').value || '100';
+        
+        const params = new URLSearchParams();
+        if (level) params.append('level', level);
+        if (date) params.append('date', date);
+        params.append('limit', limit);
+        
+        // Create a temporary link to download the logs
+        const link = document.createElement('a');
+        link.href = `/admin/configuracion/logs?${params}&download=1`;
+        link.download = `figaro-logs-${date || 'all'}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+});
+
+// Auto-refresh every 30 seconds if no date filter is set
+setInterval(function() {
+    if (!document.getElementById('log_date').value) {
+        loadLogs();
+    }
+}, 30000);
+</script>
 {{end}}

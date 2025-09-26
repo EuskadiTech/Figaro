@@ -12,6 +12,7 @@ import (
 	"github.com/EuskadiTech/Figaro/internal/database"
 	"github.com/EuskadiTech/Figaro/internal/handlers"
 	"github.com/EuskadiTech/Figaro/pkg/config"
+	"github.com/EuskadiTech/Figaro/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,11 +20,24 @@ func main() {
 	// Load configuration
 	cfg := config.Load()
 
+	// Initialize JSON logger
+	if err := logger.Initialize(cfg.DataDir); err != nil {
+		log.Fatalf("Failed to initialize logger: %v", err)
+	}
+	defer logger.Close()
+
+	// Log startup
+	logger.Info("Figaro server starting up")
+	logger.Info("Data directory: %s", cfg.DataDir)
+
 	// Initialize database
 	if err := database.Initialize(cfg.DataDir); err != nil {
+		logger.Error("Failed to initialize database: %v", err)
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 	defer database.Close()
+
+	logger.Info("Database initialized successfully")
 
 	// Create handlers
 	h := handlers.New(cfg)
@@ -92,9 +106,16 @@ func main() {
 		authGroup.GET("/admin/actividades-report", h.AdminActividadesReport)
 		authGroup.GET("/admin/files", h.AdminFiles)
 		authGroup.GET("/admin/configuracion", h.AdminConfiguracion)
+		authGroup.POST("/admin/configuracion/general", h.AdminConfiguracionGeneral)
+		authGroup.POST("/admin/configuracion/security", h.AdminConfiguracionSecurity)
+		authGroup.POST("/admin/configuracion/email", h.AdminConfiguracionEmail)
+		authGroup.POST("/admin/configuracion/backup", h.AdminConfiguracionBackup)
+		authGroup.POST("/admin/configuracion/database", h.AdminConfiguracionDatabase)
+		authGroup.GET("/admin/configuracion/logs", h.AdminConfiguracionLogs)
 	}
 
 	// Start server
+	logger.Info("Starting Figaro server on %s:%s", cfg.Host, cfg.Port)
 	log.Printf("Starting Figaro server on %s:%s", cfg.Host, cfg.Port)
 	log.Printf("Data directory: %s", cfg.DataDir)
 
@@ -104,12 +125,15 @@ func main() {
 
 	go func() {
 		<-c
+		logger.Info("Shutting down gracefully...")
 		log.Println("Shutting down gracefully...")
+		logger.Close()
 		database.Close()
 		os.Exit(0)
 	}()
 
 	if err := router.Run(cfg.Host + ":" + cfg.Port); err != nil {
+		logger.Error("Failed to start server: %v", err)
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
