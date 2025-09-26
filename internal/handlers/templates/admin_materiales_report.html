@@ -1,0 +1,181 @@
+{{define "content"}}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Informe de Materiales por Centro</h1>
+        <a href="/admin" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>
+            Volver al Panel
+        </a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>
+                        Filtros
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" action="/admin/materiales-report">
+                        <div class="mb-3">
+                            <label for="centro" class="form-label">Centro</label>
+                            <select class="form-select" id="centro" name="centro">
+                                <option value="">Todos los centros</option>
+                                {{range .Centers}}
+                                <option value="{{.ID}}">{{.Name}}</option>
+                                {{end}}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="categoria" class="form-label">Categoría</label>
+                            <select class="form-select" id="categoria" name="categoria">
+                                <option value="">Todas las categorías</option>
+                                <option value="electronico">Electrónico</option>
+                                <option value="mobiliario">Mobiliario</option>
+                                <option value="papeleria">Papelería</option>
+                                <option value="otros">Otros</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i>
+                            Generar Informe
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-info-circle text-info me-2"></i>
+                        Información
+                    </h5>
+                    <p class="card-text">
+                        Este informe muestra el inventario de materiales distribuidos por centro educativo.
+                        Utiliza los filtros para generar reportes específicos.
+                    </p>
+                    <ul class="list-unstyled mb-0">
+                        <li><i class="fas fa-check text-success me-2"></i>Cantidad total por material</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Estado de conservación</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Distribución por centro</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-chart-bar me-2"></i>
+                Resumen de Materiales
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row text-center mb-4">
+                <div class="col-md-3">
+                    <div class="border rounded p-3">
+                        <i class="fas fa-tools text-primary" style="font-size: 2rem;"></i>
+                        <h4 class="mt-2 mb-1">1,234</h4>
+                        <p class="text-muted mb-0">Total Materiales</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded p-3">
+                        <i class="fas fa-building text-info" style="font-size: 2rem;"></i>
+                        <h4 class="mt-2 mb-1">12</h4>
+                        <p class="text-muted mb-0">Centros</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded p-3">
+                        <i class="fas fa-check-circle text-success" style="font-size: 2rem;"></i>
+                        <h4 class="mt-2 mb-1">1,156</h4>
+                        <p class="text-muted mb-0">En Buen Estado</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded p-3">
+                        <i class="fas fa-exclamation-triangle text-warning" style="font-size: 2rem;"></i>
+                        <h4 class="mt-2 mb-1">78</h4>
+                        <p class="text-muted mb-0">Necesita Mantenimiento</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Centro</th>
+                            <th>Material</th>
+                            <th>Categoría</th>
+                            <th>Cantidad</th>
+                            <th>Estado</th>
+                            <th>Última Actualización</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-building text-primary me-2"></i>
+                                    Centro Educativo A
+                                </div>
+                            </td>
+                            <td>Ordenadores Portátiles</td>
+                            <td>
+                                <span class="badge bg-info">Electrónico</span>
+                            </td>
+                            <td>
+                                <span class="fw-bold">25</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-success">Buen Estado</span>
+                            </td>
+                            <td>
+                                <small class="text-muted">15/12/2024</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-building text-primary me-2"></i>
+                                    Centro Educativo B
+                                </div>
+                            </td>
+                            <td>Mesas Escolares</td>
+                            <td>
+                                <span class="badge bg-secondary">Mobiliario</span>
+                            </td>
+                            <td>
+                                <span class="fw-bold">40</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-warning">Mantenimiento</span>
+                            </td>
+                            <td>
+                                <small class="text-muted">12/12/2024</small>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-end mt-3">
+                <button class="btn btn-success me-2">
+                    <i class="fas fa-file-excel me-1"></i>
+                    Exportar Excel
+                </button>
+                <button class="btn btn-outline-primary">
+                    <i class="fas fa-file-pdf me-1"></i>
+                    Exportar PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

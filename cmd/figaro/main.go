@@ -78,6 +78,9 @@ func main() {
 		authGroup.POST("/admin/usuarios/editar/:id", h.AdminUsuarioEditar)
 		authGroup.POST("/admin/usuarios/eliminar/:id", h.AdminUsuarioEliminar)
 		authGroup.GET("/admin/centros", h.AdminCentros)
+		authGroup.GET("/admin/materiales-report", h.AdminMaterialesReport)
+		authGroup.GET("/admin/actividades-report", h.AdminActividadesReport)
+		authGroup.GET("/admin/configuracion", h.AdminConfiguracion)
 	}
 
 	// Start server

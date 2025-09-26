@@ -1548,6 +1548,66 @@ func (h *Handlers) AdminCentros(c *gin.Context) {
 	h.renderTemplate(c, "admin_centros.html", data)
 }
 
+// AdminMaterialesReport handles materials report page
+func (h *Handlers) AdminMaterialesReport(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	data := h.getCommonData(c)
+	data["PageTitle"] = "Figaró - Informe de Materiales por Centro"
+
+	h.renderTemplate(c, "admin_materiales_report.html", data)
+}
+
+// AdminActividadesReport handles activities report page
+func (h *Handlers) AdminActividadesReport(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	data := h.getCommonData(c)
+	data["PageTitle"] = "Figaró - Informe de Actividades"
+
+	h.renderTemplate(c, "admin_actividades_report.html", data)
+}
+
+// AdminConfiguracion handles system configuration page
+func (h *Handlers) AdminConfiguracion(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	data := h.getCommonData(c)
+	data["PageTitle"] = "Figaró - Configuración del Sistema"
+
+	h.renderTemplate(c, "admin_configuracion.html", data)
+}
+
 // Helper functions for admin module
 func (h *Handlers) getAllUsers() ([]models.User, error) {
 	query := `SELECT id, username, display_name, email, created_at, updated_at FROM users ORDER BY username`
