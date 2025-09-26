@@ -4,6 +4,7 @@ package handlers
 import (
 	"database/sql"
 	"embed"
+	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -347,15 +348,27 @@ func (h *Handlers) getCenters() ([]string, error) {
 
 // getAulas retrieves classrooms for a center
 func (h *Handlers) getAulas(centro string) ([]string, error) {
-	// This would typically come from database, but for now simulate
-	switch centro {
-	case "Centro Demo":
-		return []string{"Aula 1", "Aula 2", "Aula 3"}, nil
-	case "Centro Demo 2":
-		return []string{"Laboratorio", "Sala de Informática"}, nil
-	default:
-		return []string{}, nil
+	// Get center ID by name first
+	var centerID int
+	query := `SELECT id FROM centers WHERE name = ?`
+	err := database.DB.QueryRow(query, centro).Scan(&centerID)
+	if err != nil {
+		return []string{}, err
 	}
+
+	// Get classrooms from database using the same function as admin
+	classrooms, err := h.getClassroomsByCenter(fmt.Sprintf("%d", centerID))
+	if err != nil {
+		return []string{}, err
+	}
+
+	// Convert classroom models to string array for template compatibility
+	var aulaNames []string
+	for _, classroom := range classrooms {
+		aulaNames = append(aulaNames, classroom.Name)
+	}
+
+	return aulaNames, nil
 }
 
 // MaterialesIndex handles the materials inventory page
