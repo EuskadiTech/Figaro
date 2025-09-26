@@ -24,6 +24,19 @@
     border-radius: 5px;
 }
 
+#qr-video {
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
+    background-color: #000;
+}
+
+.btn-check:checked + .btn-outline-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+}
+
 /* Utility classes that don't conflict with Bootstrap */
 .scase {
   text-transform: lowercase;

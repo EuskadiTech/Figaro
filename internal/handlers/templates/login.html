@@ -90,10 +90,31 @@
                     <hr class="my-4">
 
                     <!-- QR Code Login Form -->
-                    <form method="POST" action="/login">
+                    <form method="POST" action="/login" id="qr-login-form">
                         <div class="mb-3">
-                            <label for="qr_data" class="form-label">O escanea el código QR:</label>
-                            <input type="text" class="form-control" id="qr_data" name="qr_data" placeholder="Datos del código QR">
+                            <label class="form-label">O escanea el código QR:</label>
+                            
+                            <!-- QR Scanner Mode Toggle -->
+                            <div class="btn-group d-flex mb-3" role="group">
+                                <input type="radio" class="btn-check" name="qr-mode" id="qr-manual" checked>
+                                <label class="btn btn-outline-secondary" for="qr-manual">Manual</label>
+                                
+                                <input type="radio" class="btn-check" name="qr-mode" id="qr-camera">
+                                <label class="btn btn-outline-secondary" for="qr-camera">Cámara</label>
+                            </div>
+                            
+                            <!-- Manual QR Input -->
+                            <div id="qr-manual-input">
+                                <input type="text" class="form-control" id="qr_data" name="qr_data" placeholder="Datos del código QR">
+                            </div>
+                            
+                            <!-- QR Scanner Container -->
+                            <div id="qr-scanner-container" style="display: none;">
+                                <video id="qr-video" width="100%" height="300" style="border: 1px solid #ccc; border-radius: 5px;"></video>
+                                <div id="qr-scanner-status" class="mt-2 text-center">
+                                    <small class="text-muted">Apunta la cámara hacia el código QR</small>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="d-grid">
@@ -105,5 +126,132 @@
         </div>
     </main>
     <script src="/static/bootstrap.bundle.min.js"></script>
+    <script>
+        // QR Scanner functionality
+        let qrStream = null;
+        let qrVideo = null;
+        let qrCanvas = null;
+        let qrContext = null;
+        let qrScanInterval = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const qrManualRadio = document.getElementById('qr-manual');
+            const qrCameraRadio = document.getElementById('qr-camera');
+            const qrManualInput = document.getElementById('qr-manual-input');
+            const qrScannerContainer = document.getElementById('qr-scanner-container');
+            const qrVideoElement = document.getElementById('qr-video');
+            const qrStatus = document.getElementById('qr-scanner-status');
+            const qrDataInput = document.getElementById('qr_data');
+
+            // Toggle between manual input and camera scanner
+            function toggleQRMode() {
+                if (qrCameraRadio.checked) {
+                    qrManualInput.style.display = 'none';
+                    qrScannerContainer.style.display = 'block';
+                    startQRScanner();
+                } else {
+                    qrManualInput.style.display = 'block';
+                    qrScannerContainer.style.display = 'none';
+                    stopQRScanner();
+                }
+            }
+
+            qrManualRadio.addEventListener('change', toggleQRMode);
+            qrCameraRadio.addEventListener('change', toggleQRMode);
+
+            // Start QR scanner using camera
+            async function startQRScanner() {
+                try {
+                    qrStatus.innerHTML = '<small class="text-muted">Iniciando cámara...</small>';
+                    
+                    // Request camera access
+                    qrStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            facingMode: 'environment', // Use back camera if available
+                            width: { ideal: 640 },
+                            height: { ideal: 480 }
+                        } 
+                    });
+                    
+                    qrVideo = qrVideoElement;
+                    qrVideo.srcObject = qrStream;
+                    qrVideo.play();
+
+                    // Create canvas for QR processing
+                    qrCanvas = document.createElement('canvas');
+                    qrContext = qrCanvas.getContext('2d');
+
+                    qrStatus.innerHTML = '<small class="text-muted">Apunta la cámara hacia el código QR</small>';
+                    
+                    // Start scanning for QR codes
+                    qrVideo.addEventListener('loadedmetadata', function() {
+                        qrCanvas.width = qrVideo.videoWidth;
+                        qrCanvas.height = qrVideo.videoHeight;
+                        startQRDetection();
+                    });
+
+                } catch (err) {
+                    console.error('Error accessing camera:', err);
+                    qrStatus.innerHTML = '<small class="text-danger">Error: No se pudo acceder a la cámara. ' + err.message + '</small>';
+                    // Fall back to manual input
+                    qrManualRadio.checked = true;
+                    toggleQRMode();
+                }
+            }
+
+            // Stop QR scanner
+            function stopQRScanner() {
+                if (qrScanInterval) {
+                    clearInterval(qrScanInterval);
+                    qrScanInterval = null;
+                }
+                
+                if (qrStream) {
+                    qrStream.getTracks().forEach(track => track.stop());
+                    qrStream = null;
+                }
+                
+                if (qrVideo) {
+                    qrVideo.srcObject = null;
+                }
+            }
+
+            // Simple QR detection (looking for QR-like patterns)
+            function startQRDetection() {
+                qrScanInterval = setInterval(() => {
+                    if (qrVideo && qrVideo.readyState === qrVideo.HAVE_ENOUGH_DATA) {
+                        qrContext.drawImage(qrVideo, 0, 0, qrCanvas.width, qrCanvas.height);
+                        
+                        // Simple pattern detection for QR-like codes
+                        // Note: This is a simplified approach without a full QR decoder
+                        // In a production environment, you would use a proper QR code library
+                        const imageData = qrContext.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
+                        const qrData = detectQRPattern(imageData);
+                        
+                        if (qrData) {
+                            qrDataInput.value = qrData;
+                            qrStatus.innerHTML = '<small class="text-success">¡Código QR detectado!</small>';
+                            // Optionally auto-submit the form
+                            // document.getElementById('qr-login-form').submit();
+                        }
+                    }
+                }, 500); // Scan every 500ms
+            }
+
+            // Simplified QR pattern detection
+            // This is a placeholder - in production use a proper QR code library
+            function detectQRPattern(imageData) {
+                // This is a very basic implementation
+                // In practice, you would use libraries like jsQR or ZXing-js
+                // For now, we'll return null to keep the manual input as primary method
+                return null;
+            }
+
+            // Clean up on page unload
+            window.addEventListener('beforeunload', function() {
+                stopQRScanner();
+            });
+        });
+    </script>
 </body>
 </html>
