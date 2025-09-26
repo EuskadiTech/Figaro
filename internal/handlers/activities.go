@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ActividadesIndex handles the activities page
+// ActividadesIndex handles the activities page with tabs support
 func (h *Handlers) ActividadesIndex(c *gin.Context) {
 	user := auth.GetCurrentUser(c)
 	if user == nil {
@@ -26,12 +26,22 @@ func (h *Handlers) ActividadesIndex(c *gin.Context) {
 		return
 	}
 
-	// Get search parameters
+	// Get search and tab parameters
 	searchQuery := c.Query("q")
 	showPast := c.Query("past") == "y"
+	activeTab := c.DefaultQuery("tab", "all") // default to "all" activities
 
-	// Get activities from database
-	activities, err := h.getActivities(centro, searchQuery, showPast)
+	// Get activities from database based on active tab
+	var activities []models.Activity
+	switch activeTab {
+	case "compartidas":
+		activities, err = h.getSharedActivities(centro, searchQuery, showPast)
+	case "enlaces":
+		activities, err = h.getActivitiesWithCustomLinks(centro, searchQuery, showPast)
+	default: // "all" or any other value
+		activities, err = h.getActivities(centro, searchQuery, showPast)
+	}
+	
 	if err != nil {
 		activities = []models.Activity{} // Empty slice if error
 	}
@@ -42,6 +52,7 @@ func (h *Handlers) ActividadesIndex(c *gin.Context) {
 	data["Centro"] = centro
 	data["SearchQuery"] = searchQuery
 	data["ShowPast"] = showPast
+	data["ActiveTab"] = activeTab
 
 	h.renderTemplate(c, "actividades.html", data)
 }
@@ -465,4 +476,181 @@ func (h *Handlers) getActivity(activityID, centro string) (models.Activity, erro
 func parseDateTime(date, timeStr string) (time.Time, error) {
 	dateTimeStr := date + " " + timeStr
 	return time.Parse("2006-01-02 15:04", dateTimeStr)
+}
+
+// getSharedActivities retrieves activities shared specifically with the current center (not global)
+func (h *Handlers) getSharedActivities(centro string, searchQuery string, showPast bool) ([]models.Activity, error) {
+	var query string
+	var args []interface{}
+
+	if showPast {
+		query = `SELECT DISTINCT a.id, a.center_id, a.title, a.description, a.start_datetime, a.end_datetime, 
+				 a.is_global, a.meeting_url, a.web_url, a.created_at, a.updated_at,
+				 c_shared.name as shared_from_center
+				 FROM activities a
+				 INNER JOIN activity_shares ast ON a.id = ast.activity_id
+				 INNER JOIN centers c_current ON ast.center_id = c_current.id
+				 INNER JOIN centers c_shared ON ast.shared_by_center_id = c_shared.id
+				 WHERE c_current.name = ?`
+		args = []interface{}{centro}
+	} else {
+		query = `SELECT DISTINCT a.id, a.center_id, a.title, a.description, a.start_datetime, a.end_datetime, 
+				 a.is_global, a.meeting_url, a.web_url, a.created_at, a.updated_at,
+				 c_shared.name as shared_from_center
+				 FROM activities a
+				 INNER JOIN activity_shares ast ON a.id = ast.activity_id
+				 INNER JOIN centers c_current ON ast.center_id = c_current.id
+				 INNER JOIN centers c_shared ON ast.shared_by_center_id = c_shared.id
+				 WHERE c_current.name = ? AND a.start_datetime >= datetime('now')`
+		args = []interface{}{centro}
+	}
+
+	if searchQuery != "" {
+		query += " AND (a.title LIKE ? OR a.description LIKE ?)"
+		searchPattern := "%" + searchQuery + "%"
+		args = append(args, searchPattern, searchPattern)
+	}
+
+	query += " ORDER BY a.start_datetime ASC"
+
+	rows, err := database.DB.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var activities []models.Activity
+	for rows.Next() {
+		var activity models.Activity
+		var centerID sql.NullInt64
+		var meetingURL sql.NullString
+		var webURL sql.NullString
+		var sharedFromCenter sql.NullString
+
+		err := rows.Scan(&activity.ID, &centerID, &activity.Title, &activity.Description,
+			&activity.StartDatetime, &activity.EndDatetime, &activity.IsGlobal,
+			&meetingURL, &webURL, &activity.CreatedAt, &activity.UpdatedAt, &sharedFromCenter)
+		if err != nil {
+			continue
+		}
+
+		if centerID.Valid {
+			centerIDInt := int(centerID.Int64)
+			activity.CenterID = &centerIDInt
+		}
+
+		if meetingURL.Valid {
+			activity.MeetingURL = &meetingURL.String
+		}
+
+		if webURL.Valid {
+			activity.WebURL = &webURL.String
+		}
+
+		if sharedFromCenter.Valid {
+			activity.SharedFromCenter = &sharedFromCenter.String
+		}
+
+		activities = append(activities, activity)
+	}
+
+	return activities, nil
+}
+
+// getActivitiesWithCustomLinks retrieves activities that have custom links
+func (h *Handlers) getActivitiesWithCustomLinks(centro string, searchQuery string, showPast bool) ([]models.Activity, error) {
+	var query string
+	var args []interface{}
+
+	if showPast {
+		query = `SELECT DISTINCT a.id, a.center_id, a.title, a.description, a.start_datetime, a.end_datetime, 
+				 a.is_global, a.meeting_url, a.web_url, a.created_at, a.updated_at
+				 FROM activities a
+				 INNER JOIN activity_custom_links acl ON a.id = acl.activity_id
+				 WHERE (a.center_id = (SELECT id FROM centers WHERE name = ?) OR a.is_global = 1)`
+		args = []interface{}{centro}
+	} else {
+		query = `SELECT DISTINCT a.id, a.center_id, a.title, a.description, a.start_datetime, a.end_datetime, 
+				 a.is_global, a.meeting_url, a.web_url, a.created_at, a.updated_at
+				 FROM activities a
+				 INNER JOIN activity_custom_links acl ON a.id = acl.activity_id
+				 WHERE (a.center_id = (SELECT id FROM centers WHERE name = ?) OR a.is_global = 1)
+				 AND a.start_datetime >= datetime('now')`
+		args = []interface{}{centro}
+	}
+
+	if searchQuery != "" {
+		query += " AND (a.title LIKE ? OR a.description LIKE ?)"
+		searchPattern := "%" + searchQuery + "%"
+		args = append(args, searchPattern, searchPattern)
+	}
+
+	query += " ORDER BY a.start_datetime ASC"
+
+	rows, err := database.DB.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var activities []models.Activity
+	for rows.Next() {
+		var activity models.Activity
+		var centerID sql.NullInt64
+		var meetingURL sql.NullString
+		var webURL sql.NullString
+
+		err := rows.Scan(&activity.ID, &centerID, &activity.Title, &activity.Description,
+			&activity.StartDatetime, &activity.EndDatetime, &activity.IsGlobal,
+			&meetingURL, &webURL, &activity.CreatedAt, &activity.UpdatedAt)
+		if err != nil {
+			continue
+		}
+
+		if centerID.Valid {
+			centerIDInt := int(centerID.Int64)
+			activity.CenterID = &centerIDInt
+		}
+
+		if meetingURL.Valid {
+			activity.MeetingURL = &meetingURL.String
+		}
+
+		if webURL.Valid {
+			activity.WebURL = &webURL.String
+		}
+
+		// Load custom links for this activity
+		customLinks, err := h.getCustomLinksForActivity(activity.ID)
+		if err == nil {
+			activity.CustomLinks = customLinks
+		}
+
+		activities = append(activities, activity)
+	}
+
+	return activities, nil
+}
+
+// getCustomLinksForActivity retrieves custom links for a specific activity
+func (h *Handlers) getCustomLinksForActivity(activityID int) ([]models.ActivityCustomLink, error) {
+	query := `SELECT id, activity_id, label, url, created_at FROM activity_custom_links WHERE activity_id = ? ORDER BY created_at ASC`
+	
+	rows, err := database.DB.Query(query, activityID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var customLinks []models.ActivityCustomLink
+	for rows.Next() {
+		var link models.ActivityCustomLink
+		err := rows.Scan(&link.ID, &link.ActivityID, &link.Label, &link.URL, &link.CreatedAt)
+		if err != nil {
+			continue
+		}
+		customLinks = append(customLinks, link)
+	}
+
+	return customLinks, nil
 }
