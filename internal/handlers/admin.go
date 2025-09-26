@@ -45,15 +45,27 @@ func (h *Handlers) AdminUsuarios(c *gin.Context) {
 		return
 	}
 
-	// Get all users
-	users, err := h.getAllUsers()
+	// Get pagination parameters
+	pageStr := c.DefaultQuery("page", "1")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	// Get all users with pagination
+	users, totalCount, err := h.getAllUsersPaginated(page, 25)
 	if err != nil {
 		users = []models.User{} // Empty slice if error
+		totalCount = 0
 	}
+
+	// Create pagination info
+	pagination := models.NewPaginationInfo(page, 25, totalCount)
 
 	data := h.getCommonData(c)
 	data["PageTitle"] = "Figaró - Gestión de Usuarios"
 	data["Users"] = users
+	data["Pagination"] = pagination
 
 	h.renderTemplate(c, "admin_usuarios.html", data)
 }
@@ -857,11 +869,29 @@ func (h *Handlers) AdminAulaEliminar(c *gin.Context) {
 
 // Helper functions for admin module
 func (h *Handlers) getAllUsers() ([]models.User, error) {
-	query := `SELECT id, username, display_name, email, created_at, updated_at FROM users ORDER BY username`
+	users, _, err := h.getAllUsersPaginated(1, 1000) // Large limit for backward compatibility
+	return users, err
+}
 
-	rows, err := database.DB.Query(query)
+// getAllUsersPaginated retrieves users with pagination
+func (h *Handlers) getAllUsersPaginated(page, perPage int) ([]models.User, int, error) {
+	// First get total count
+	countQuery := `SELECT COUNT(*) FROM users`
+	var totalCount int
+	err := database.DB.QueryRow(countQuery).Scan(&totalCount)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+
+	// Calculate pagination
+	pagination := models.NewPaginationInfo(page, perPage, totalCount)
+
+	// Get paginated results
+	query := `SELECT id, username, display_name, email, created_at, updated_at FROM users ORDER BY username LIMIT ? OFFSET ?`
+
+	rows, err := database.DB.Query(query, perPage, pagination.Offset)
+	if err != nil {
+		return nil, totalCount, err
 	}
 	defer rows.Close()
 
@@ -880,7 +910,7 @@ func (h *Handlers) getAllUsers() ([]models.User, error) {
 		users = append(users, user)
 	}
 
-	return users, nil
+	return users, totalCount, nil
 }
 
 func (h *Handlers) getUserByID(userID string) (models.User, error) {
