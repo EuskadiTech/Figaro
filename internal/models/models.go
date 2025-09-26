@@ -205,3 +205,53 @@ type ActivityStats struct {
 	InProgressActivities int `json:"in_progress_activities"`
 	CompletedActivities int `json:"completed_activities"`
 }
+
+// PaginationInfo represents pagination information for lists
+type PaginationInfo struct {
+	CurrentPage  int `json:"current_page"`
+	PerPage      int `json:"per_page"`
+	TotalItems   int `json:"total_items"`
+	TotalPages   int `json:"total_pages"`
+	HasPrevious  bool `json:"has_previous"`
+	HasNext      bool `json:"has_next"`
+	PreviousPage int `json:"previous_page"`
+	NextPage     int `json:"next_page"`
+	Offset       int `json:"offset"`
+}
+
+// NewPaginationInfo creates a new PaginationInfo with calculated values
+func NewPaginationInfo(page, perPage, totalItems int) *PaginationInfo {
+	if page < 1 {
+		page = 1
+	}
+	if perPage < 1 {
+		perPage = 25 // Default to 25 items per page
+	}
+
+	totalPages := (totalItems + perPage - 1) / perPage // Ceiling division
+	if totalPages < 1 {
+		totalPages = 1
+	}
+
+	// Ensure current page doesn't exceed total pages
+	if page > totalPages {
+		page = totalPages
+	}
+
+	offset := (page - 1) * perPage
+	if offset < 0 {
+		offset = 0
+	}
+
+	return &PaginationInfo{
+		CurrentPage:  page,
+		PerPage:      perPage,
+		TotalItems:   totalItems,
+		TotalPages:   totalPages,
+		HasPrevious:  page > 1,
+		HasNext:      page < totalPages,
+		PreviousPage: page - 1,
+		NextPage:     page + 1,
+		Offset:       offset,
+	}
+}

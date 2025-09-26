@@ -26,28 +26,59 @@ func (h *Handlers) MaterialesIndex(c *gin.Context) {
 		return
 	}
 
-	// Get materials from database
-	materials, err := h.getMaterials(centro)
+	// Get pagination parameters
+	pageStr := c.DefaultQuery("page", "1")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	// Get materials from database with pagination
+	materials, totalCount, err := h.getMaterialsPaginated(centro, page, 25)
 	if err != nil {
 		materials = []models.Material{} // Empty slice if error
+		totalCount = 0
 	}
+
+	// Create pagination info
+	pagination := models.NewPaginationInfo(page, 25, totalCount)
 
 	data := h.getCommonData(c)
 	data["PageTitle"] = "Figaró - Inventario de Materiales"
 	data["Materials"] = materials
 	data["Centro"] = centro
+	data["Pagination"] = pagination
 
 	h.renderTemplate(c, "materiales.html", data)
 }
 
-// getMaterials retrieves materials for a center
+// getMaterials retrieves materials for a center (kept for backward compatibility)
 func (h *Handlers) getMaterials(centro string) ([]models.Material, error) {
-	query := `SELECT id, center_id, name, photo_path, unit, available_quantity, minimum_quantity, notes, category, created_at, updated_at 
-			  FROM materials WHERE center_id = (SELECT id FROM centers WHERE name = ?) ORDER BY name`
+	materials, _, err := h.getMaterialsPaginated(centro, 1, 1000) // Large limit for backward compatibility
+	return materials, err
+}
 
-	rows, err := database.DB.Query(query, centro)
+// getMaterialsPaginated retrieves materials for a center with pagination
+func (h *Handlers) getMaterialsPaginated(centro string, page, perPage int) ([]models.Material, int, error) {
+	// First get total count
+	countQuery := `SELECT COUNT(*) FROM materials WHERE center_id = (SELECT id FROM centers WHERE name = ?)`
+	var totalCount int
+	err := database.DB.QueryRow(countQuery, centro).Scan(&totalCount)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+
+	// Calculate offset
+	pagination := models.NewPaginationInfo(page, perPage, totalCount)
+	
+	// Get paginated results
+	query := `SELECT id, center_id, name, photo_path, unit, available_quantity, minimum_quantity, notes, category, created_at, updated_at 
+			  FROM materials WHERE center_id = (SELECT id FROM centers WHERE name = ?) 
+			  ORDER BY name LIMIT ? OFFSET ?`
+
+	rows, err := database.DB.Query(query, centro, perPage, pagination.Offset)
+	if err != nil {
+		return nil, totalCount, err
 	}
 	defer rows.Close()
 
@@ -70,7 +101,7 @@ func (h *Handlers) getMaterials(centro string) ([]models.Material, error) {
 		materials = append(materials, material)
 	}
 
-	return materials, nil
+	return materials, totalCount, nil
 }
 
 // MaterialesCrear handles material creation (GET shows form, POST processes it)

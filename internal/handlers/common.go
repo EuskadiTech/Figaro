@@ -68,6 +68,35 @@ func (h *Handlers) loadTemplate(templateName string) (*template.Template, error)
 		"now": func() time.Time {
 			return time.Now()
 		},
+		// Math functions for pagination
+		"add": func(a, b int) int {
+			return a + b
+		},
+		"sub": func(a, b int) int {
+			return a - b
+		},
+		"mul": func(a, b int) int {
+			return a * b
+		},
+		"min": func(a, b int) int {
+			if a < b {
+				return a
+			}
+			return b
+		},
+		"max": func(a, b int) int {
+			if a > b {
+				return a
+			}
+			return b
+		},
+		"seq": func(start, end int) []int {
+			result := make([]int, 0, end-start+1)
+			for i := start; i <= end; i++ {
+				result = append(result, i)
+			}
+			return result
+		},
 	})
 
 	// First, always load base.html
@@ -78,6 +107,16 @@ func (h *Handlers) loadTemplate(templateName string) (*template.Template, error)
 
 	// Parse base template
 	tmpl, err = tmpl.Parse(string(baseContent))
+	if err != nil {
+		return nil, err
+	}
+
+	// Always load pagination.html
+	paginationContent, err := templateFS.ReadFile("templates/pagination.html")
+	if err != nil {
+		return nil, err
+	}
+	tmpl, err = tmpl.Parse(string(paginationContent))
 	if err != nil {
 		return nil, err
 	}

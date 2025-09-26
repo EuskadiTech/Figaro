@@ -1,0 +1,83 @@
+{{define "pagination"}}
+{{if and .Pagination (gt .Pagination.TotalPages 1)}}
+<nav aria-label="Paginación" class="mt-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <small class="text-muted">
+                Mostrando {{if eq .Pagination.TotalItems 0}}0{{else}}{{add (mul (sub .Pagination.CurrentPage 1) .Pagination.PerPage) 1}}{{end}} 
+                - {{min (mul .Pagination.CurrentPage .Pagination.PerPage) .Pagination.TotalItems}} 
+                de {{.Pagination.TotalItems}} resultados
+            </small>
+        </div>
+        <ul class="pagination pagination-sm mb-0">
+            <!-- Previous button -->
+            <li class="page-item {{if not .Pagination.HasPrevious}}disabled{{end}}">
+                {{if .Pagination.HasPrevious}}
+                <a class="page-link" href="?page={{.Pagination.PreviousPage}}{{if .SearchQuery}}&q={{.SearchQuery}}{{end}}{{if .ShowPast}}&past=y{{end}}{{if .ActiveTab}}&tab={{.ActiveTab}}{{end}}" aria-label="Anterior">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+                {{else}}
+                <span class="page-link" aria-label="Anterior">
+                    <span aria-hidden="true">&laquo;</span>
+                </span>
+                {{end}}
+            </li>
+
+            <!-- Page numbers -->
+            {{$currentPage := .Pagination.CurrentPage}}
+            {{$totalPages := .Pagination.TotalPages}}
+            {{$startPage := max 1 (sub $currentPage 2)}}
+            {{$endPage := min $totalPages (add $currentPage 2)}}
+            
+            <!-- First page if not in range -->
+            {{if gt $startPage 1}}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{{if .SearchQuery}}&q={{.SearchQuery}}{{end}}{{if .ShowPast}}&past=y{{end}}{{if .ActiveTab}}&tab={{.ActiveTab}}{{end}}">1</a>
+                </li>
+                {{if gt $startPage 2}}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {{end}}
+            {{end}}
+
+            <!-- Page range -->
+            {{range $page := (seq $startPage $endPage)}}
+                <li class="page-item {{if eq $page $currentPage}}active{{end}}">
+                    {{if eq $page $currentPage}}
+                        <span class="page-link">{{$page}}</span>
+                    {{else}}
+                        <a class="page-link" href="?page={{$page}}{{if $.SearchQuery}}&q={{$.SearchQuery}}{{end}}{{if $.ShowPast}}&past=y{{end}}{{if $.ActiveTab}}&tab={{$.ActiveTab}}{{end}}">{{$page}}</a>
+                    {{end}}
+                </li>
+            {{end}}
+
+            <!-- Last page if not in range -->
+            {{if lt $endPage $totalPages}}
+                {{if lt $endPage (sub $totalPages 1)}}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {{end}}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{$totalPages}}{{if .SearchQuery}}&q={{.SearchQuery}}{{end}}{{if .ShowPast}}&past=y{{end}}{{if .ActiveTab}}&tab={{.ActiveTab}}{{end}}">{{$totalPages}}</a>
+                </li>
+            {{end}}
+
+            <!-- Next button -->
+            <li class="page-item {{if not .Pagination.HasNext}}disabled{{end}}">
+                {{if .Pagination.HasNext}}
+                <a class="page-link" href="?page={{.Pagination.NextPage}}{{if .SearchQuery}}&q={{.SearchQuery}}{{end}}{{if .ShowPast}}&past=y{{end}}{{if .ActiveTab}}&tab={{.ActiveTab}}{{end}}" aria-label="Siguiente">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+                {{else}}
+                <span class="page-link" aria-label="Siguiente">
+                    <span aria-hidden="true">&raquo;</span>
+                </span>
+                {{end}}
+            </li>
+        </ul>
+    </div>
+</nav>
+{{end}}
+{{end}}
