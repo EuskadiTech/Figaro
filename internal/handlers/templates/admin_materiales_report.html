@@ -130,7 +130,11 @@
                             </td>
                             <td>{{.Name}}</td>
                             <td>
-                                <span class="badge bg-secondary">General</span>
+                                {{if eq .Category "electronico"}}<span class="badge bg-info">Electrónico</span>
+                                {{else if eq .Category "mobiliario"}}<span class="badge bg-warning">Mobiliario</span>
+                                {{else if eq .Category "papeleria"}}<span class="badge bg-success">Papelería</span>
+                                {{else if eq .Category "otros"}}<span class="badge bg-secondary">Otros</span>
+                                {{else}}<span class="badge bg-light text-dark">{{.Category}}</span>{{end}}
                             </td>
                             <td>
                                 <span class="fw-bold">{{.AvailableQuantity}} {{.Unit}}</span>

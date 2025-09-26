@@ -42,7 +42,7 @@ func (h *Handlers) MaterialesIndex(c *gin.Context) {
 
 // getMaterials retrieves materials for a center
 func (h *Handlers) getMaterials(centro string) ([]models.Material, error) {
-	query := `SELECT id, center_id, name, photo_path, unit, available_quantity, minimum_quantity, notes, created_at, updated_at 
+	query := `SELECT id, center_id, name, photo_path, unit, available_quantity, minimum_quantity, notes, category, created_at, updated_at 
 			  FROM materials WHERE center_id = (SELECT id FROM centers WHERE name = ?) ORDER BY name`
 
 	rows, err := database.DB.Query(query, centro)
@@ -58,7 +58,7 @@ func (h *Handlers) getMaterials(centro string) ([]models.Material, error) {
 
 		err := rows.Scan(&material.ID, &material.CenterID, &material.Name, &photoPath,
 			&material.Unit, &material.AvailableQuantity, &material.MinimumQuantity,
-			&material.Notes, &material.CreatedAt, &material.UpdatedAt)
+			&material.Notes, &material.Category, &material.CreatedAt, &material.UpdatedAt)
 		if err != nil {
 			continue
 		}
@@ -106,19 +106,21 @@ func (h *Handlers) MaterialesCrear(c *gin.Context) {
 func (h *Handlers) handleMaterialCreate(c *gin.Context, centro string) {
 	name := c.PostForm("nombre")
 	unit := c.PostForm("unidad")
+	category := c.PostForm("categoria")
 	availableQty := c.PostForm("cantidad_disponible")
 	minimumQty := c.PostForm("cantidad_minima")
 	notes := c.PostForm("notas")
 
-	if name == "" || unit == "" {
+	if name == "" || unit == "" || category == "" {
 		data := h.getCommonData(c)
 		data["PageTitle"] = "Figaró - Crear Material"
 		data["Centro"] = centro
 		data["Action"] = "crear"
-		data["ErrorMessage"] = "El nombre y la unidad son requeridos"
+		data["ErrorMessage"] = "El nombre, la unidad y la categoría son requeridos"
 		data["FormData"] = gin.H{
 			"nombre":              name,
 			"unidad":              unit,
+			"categoria":           category,
 			"cantidad_disponible": availableQty,
 			"cantidad_minima":     minimumQty,
 			"notas":               notes,
@@ -148,10 +150,10 @@ func (h *Handlers) handleMaterialCreate(c *gin.Context, centro string) {
 	}
 
 	// Insert into database
-	query := `INSERT INTO materials (center_id, name, unit, available_quantity, minimum_quantity, notes, updated_at) 
-			  VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
+	query := `INSERT INTO materials (center_id, name, unit, category, available_quantity, minimum_quantity, notes, updated_at) 
+			  VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`
 
-	_, err = database.DB.Exec(query, centerID, name, unit, availableQtyInt, minimumQtyInt, notes)
+	_, err = database.DB.Exec(query, centerID, name, unit, category, availableQtyInt, minimumQtyInt, notes)
 	if err != nil {
 		data := h.getCommonData(c)
 		data["PageTitle"] = "Figaró - Crear Material"
@@ -219,18 +221,19 @@ func (h *Handlers) MaterialesEditar(c *gin.Context) {
 func (h *Handlers) handleMaterialUpdate(c *gin.Context, centro, materialID string) {
 	name := c.PostForm("nombre")
 	unit := c.PostForm("unidad")
+	category := c.PostForm("categoria")
 	availableQty := c.PostForm("cantidad_disponible")
 	minimumQty := c.PostForm("cantidad_minima")
 	notes := c.PostForm("notas")
 
-	if name == "" || unit == "" {
+	if name == "" || unit == "" || category == "" {
 		material, _ := h.getMaterial(materialID, centro)
 		data := h.getCommonData(c)
 		data["PageTitle"] = "Figaró - Editar Material"
 		data["Centro"] = centro
 		data["Action"] = "editar"
 		data["Material"] = material
-		data["ErrorMessage"] = "El nombre y la unidad son requeridos"
+		data["ErrorMessage"] = "El nombre, la unidad y la categoría son requeridos"
 		h.renderTemplate(c, "material_form.html", data)
 		return
 	}
@@ -256,10 +259,10 @@ func (h *Handlers) handleMaterialUpdate(c *gin.Context, centro, materialID strin
 	}
 
 	// Update in database
-	query := `UPDATE materials SET name = ?, unit = ?, available_quantity = ?, minimum_quantity = ?, notes = ?, updated_at = datetime('now')
+	query := `UPDATE materials SET name = ?, unit = ?, category = ?, available_quantity = ?, minimum_quantity = ?, notes = ?, updated_at = datetime('now')
 			  WHERE id = ? AND center_id = ?`
 
-	result, err := database.DB.Exec(query, name, unit, availableQtyInt, minimumQtyInt, notes, materialID, centerID)
+	result, err := database.DB.Exec(query, name, unit, category, availableQtyInt, minimumQtyInt, notes, materialID, centerID)
 	if err != nil {
 		material, _ := h.getMaterial(materialID, centro)
 		data := h.getCommonData(c)
@@ -329,14 +332,14 @@ func (h *Handlers) MaterialesEliminar(c *gin.Context) {
 // getMaterial retrieves a single material by ID and center
 func (h *Handlers) getMaterial(materialID, centro string) (models.Material, error) {
 	var material models.Material
-	query := `SELECT id, center_id, name, photo_path, unit, available_quantity, minimum_quantity, notes, created_at, updated_at 
+	query := `SELECT id, center_id, name, photo_path, unit, available_quantity, minimum_quantity, notes, category, created_at, updated_at 
 			  FROM materials WHERE id = ? AND center_id = (SELECT id FROM centers WHERE name = ?)`
 
 	var photoPath sql.NullString
 	err := database.DB.QueryRow(query, materialID, centro).Scan(
 		&material.ID, &material.CenterID, &material.Name, &photoPath,
 		&material.Unit, &material.AvailableQuantity, &material.MinimumQuantity,
-		&material.Notes, &material.CreatedAt, &material.UpdatedAt)
+		&material.Notes, &material.Category, &material.CreatedAt, &material.UpdatedAt)
 
 	if photoPath.Valid {
 		material.PhotoPath = &photoPath.String

@@ -90,6 +90,7 @@ func main() {
 		authGroup.POST("/admin/centros/aulas/:center_id/eliminar/:aula_id", h.AdminAulaEliminar)
 		authGroup.GET("/admin/materiales-report", h.AdminMaterialesReport)
 		authGroup.GET("/admin/actividades-report", h.AdminActividadesReport)
+		authGroup.GET("/admin/files", h.AdminFiles)
 		authGroup.GET("/admin/configuracion", h.AdminConfiguracion)
 	}
 

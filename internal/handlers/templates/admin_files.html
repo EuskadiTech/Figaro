@@ -1,0 +1,170 @@
+{{define "content"}}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Gestión de Archivos</h1>
+        <a href="/admin" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>
+            Volver al Panel
+        </a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-folder-open me-2"></i>
+                        Explorador de Archivos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="file-explorer">
+                        <div class="d-flex align-items-center mb-3">
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-0">
+                                    <li class="breadcrumb-item">
+                                        <i class="fas fa-home me-1"></i>
+                                        <span>data</span>
+                                    </li>
+                                    <li class="breadcrumb-item active" aria-current="page">uploads</li>
+                                </ol>
+                            </nav>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Tipo</th>
+                                        <th>Tamaño</th>
+                                        <th>Modificado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Example files -->
+                                    <tr>
+                                        <td>
+                                            <i class="fas fa-folder text-warning me-2"></i>
+                                            <span>materiales</span>
+                                        </td>
+                                        <td><span class="badge bg-secondary">Carpeta</span></td>
+                                        <td>-</td>
+                                        <td>25/09/2025 14:30</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-folder-open"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <i class="fas fa-folder text-warning me-2"></i>
+                                            <span>actividades</span>
+                                        </td>
+                                        <td><span class="badge bg-secondary">Carpeta</span></td>
+                                        <td>-</td>
+                                        <td>25/09/2025 14:30</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-folder-open"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <i class="fas fa-database text-info me-2"></i>
+                                            <span>figaro.db</span>
+                                        </td>
+                                        <td><span class="badge bg-info">Base de Datos</span></td>
+                                        <td>156 KB</td>
+                                        <td>26/09/2025 11:31</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-success" title="Descargar backup">
+                                                <i class="fas fa-download"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Estadísticas de Almacenamiento
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted">Espacio utilizado</small>
+                            <small class="text-muted">2.1 MB / 100 MB</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" style="width: 2.1%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border rounded p-2">
+                                <i class="fas fa-image text-primary" style="font-size: 1.5rem;"></i>
+                                <div class="mt-1">
+                                    <small class="fw-bold d-block">24</small>
+                                    <small class="text-muted">Imágenes</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-2">
+                                <i class="fas fa-file-alt text-info" style="font-size: 1.5rem;"></i>
+                                <div class="mt-1">
+                                    <small class="fw-bold d-block">12</small>
+                                    <small class="text-muted">Documentos</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>
+                        Herramientas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-upload me-1"></i>
+                            Subir Archivos
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-folder-plus me-1"></i>
+                            Nueva Carpeta
+                        </button>
+                        <hr>
+                        <button class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-database me-1"></i>
+                            Backup Base de Datos
+                        </button>
+                        <button class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-broom me-1"></i>
+                            Limpiar Archivos Temporales
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

@@ -63,11 +63,11 @@ func (h *Handlers) getActivities(centro string, searchQuery string, showPast boo
 	var args []interface{}
 
 	if showPast {
-		query = `SELECT id, center_id, title, description, start_datetime, end_datetime, is_global, meeting_url, web_url, created_at, updated_at 
+		query = `SELECT id, center_id, title, description, start_datetime, end_datetime, is_global, status, meeting_url, web_url, created_at, updated_at 
 				FROM activities WHERE (center_id = (SELECT id FROM centers WHERE name = ?) OR is_global = 1)`
 		args = []interface{}{centro}
 	} else {
-		query = `SELECT id, center_id, title, description, start_datetime, end_datetime, is_global, meeting_url, web_url, created_at, updated_at 
+		query = `SELECT id, center_id, title, description, start_datetime, end_datetime, is_global, status, meeting_url, web_url, created_at, updated_at 
 				FROM activities WHERE (center_id = (SELECT id FROM centers WHERE name = ?) OR is_global = 1) 
 				AND start_datetime >= datetime('now')`
 		args = []interface{}{centro}
@@ -95,7 +95,7 @@ func (h *Handlers) getActivities(centro string, searchQuery string, showPast boo
 		var webURL sql.NullString
 
 		err := rows.Scan(&activity.ID, &centerID, &activity.Title, &activity.Description,
-			&activity.StartDatetime, &activity.EndDatetime, &activity.IsGlobal,
+			&activity.StartDatetime, &activity.EndDatetime, &activity.IsGlobal, &activity.Status,
 			&meetingURL, &webURL, &activity.CreatedAt, &activity.UpdatedAt)
 		if err != nil {
 			continue

@@ -79,6 +79,18 @@
             </div>
 
             <div class="form-group">
+                <label for="status">Estado</label>
+                <select id="status" 
+                        name="status" 
+                        class="form-select">
+                    <option value="pending" {{if .Activity}}{{if eq .Activity.Status "pending"}}selected{{end}}{{else if .FormData}}{{if eq .FormData.status "pending"}}selected{{end}}{{else}}selected{{end}}>Pendiente</option>
+                    <option value="in_progress" {{if .Activity}}{{if eq .Activity.Status "in_progress"}}selected{{end}}{{else if .FormData}}{{if eq .FormData.status "in_progress"}}selected{{end}}{{end}}>En Progreso</option>
+                    <option value="completed" {{if .Activity}}{{if eq .Activity.Status "completed"}}selected{{end}}{{else if .FormData}}{{if eq .FormData.status "completed"}}selected{{end}}{{end}}>Completada</option>
+                    <option value="cancelled" {{if .Activity}}{{if eq .Activity.Status "cancelled"}}selected{{end}}{{else if .FormData}}{{if eq .FormData.status "cancelled"}}selected{{end}}{{end}}>Cancelada</option>
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label for="meeting_url">URL de Reunión</label>
                 <input type="url" 
                        id="meeting_url" 
@@ -94,6 +106,33 @@
                        name="web_url" 
                        value="{{if .Activity}}{{if .Activity.WebURL}}{{.Activity.WebURL}}{{end}}{{else if .FormData}}{{.FormData.web_url}}{{end}}" 
                        placeholder="https://ejemplo.com">
+            </div>
+
+            <div class="form-group">
+                <label>Enlaces Personalizados</label>
+                <div id="custom-links-container">
+                    {{if .Activity}}{{range $index, $link := .Activity.CustomLinks}}
+                    <div class="custom-link-row d-flex gap-2 mb-2">
+                        <input type="text" 
+                               name="custom_link_label[]" 
+                               value="{{$link.Label}}" 
+                               placeholder="Etiqueta del enlace" 
+                               class="form-control">
+                        <input type="url" 
+                               name="custom_link_url[]" 
+                               value="{{$link.URL}}" 
+                               placeholder="https://ejemplo.com" 
+                               class="form-control">
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeCustomLink(this)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    {{end}}{{end}}
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addCustomLink()">
+                    <i class="fas fa-plus me-1"></i>
+                    Añadir Enlace Personalizado
+                </button>
             </div>
 
             <div class="d-flex gap-2">
@@ -217,4 +256,30 @@
     }
 }
 </style>
+
+<script>
+function addCustomLink() {
+    const container = document.getElementById('custom-links-container');
+    const linkRow = document.createElement('div');
+    linkRow.className = 'custom-link-row d-flex gap-2 mb-2';
+    linkRow.innerHTML = `
+        <input type="text" 
+               name="custom_link_label[]" 
+               placeholder="Etiqueta del enlace" 
+               class="form-control">
+        <input type="url" 
+               name="custom_link_url[]" 
+               placeholder="https://ejemplo.com" 
+               class="form-control">
+        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeCustomLink(this)">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    container.appendChild(linkRow);
+}
+
+function removeCustomLink(button) {
+    button.closest('.custom-link-row').remove();
+}
+</script>
 {{end}}
