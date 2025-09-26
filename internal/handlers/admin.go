@@ -90,9 +90,16 @@ func (h *Handlers) AdminUsuarioCrear(c *gin.Context) {
 	}
 
 	// Show creation form
+	centers, err := h.getAllCenters()
+	if err != nil {
+		centers = []models.Center{}
+	}
+
 	data := h.getCommonData(c)
 	data["PageTitle"] = "Figaró - Crear Usuario"
 	data["Action"] = "crear"
+	data["Centers"] = centers
+	data["DefaultCenterID"] = 0 // Default to no center selected
 
 	h.renderTemplate(c, "admin_usuario_form.html", data)
 }
@@ -104,17 +111,23 @@ func (h *Handlers) handleUserCreate(c *gin.Context) {
 	displayName := c.PostForm("display_name")
 	email := c.PostForm("email")
 	permissions := c.PostFormArray("permissions")
+	defaultCenterID := c.PostForm("default_center_id")
+	forceDefaultCenter := c.PostForm("force_default_center") == "on"
 
 	if username == "" || password == "" || displayName == "" || email == "" {
+		centers, _ := h.getAllCenters()
 		data := h.getCommonData(c)
 		data["PageTitle"] = "Figaró - Crear Usuario"
 		data["Action"] = "crear"
+		data["Centers"] = centers
 		data["ErrorMessage"] = "Todos los campos son requeridos"
 		data["FormData"] = gin.H{
-			"username":     username,
-			"display_name": displayName,
-			"email":        email,
-			"permissions":  permissions,
+			"username":              username,
+			"display_name":          displayName,
+			"email":                 email,
+			"permissions":           permissions,
+			"default_center_id":     defaultCenterID,
+			"force_default_center":  forceDefaultCenter,
 		}
 		h.renderTemplate(c, "admin_usuario_form.html", data)
 		return
@@ -123,9 +136,11 @@ func (h *Handlers) handleUserCreate(c *gin.Context) {
 	// Hash password
 	hashedPassword, err := auth.HashPassword(password)
 	if err != nil {
+		centers, _ := h.getAllCenters()
 		data := h.getCommonData(c)
 		data["PageTitle"] = "Figaró - Crear Usuario"
 		data["Action"] = "crear"
+		data["Centers"] = centers
 		data["ErrorMessage"] = "Error al procesar la contraseña"
 		h.renderTemplate(c, "admin_usuario_form.html", data)
 		return
@@ -134,24 +149,36 @@ func (h *Handlers) handleUserCreate(c *gin.Context) {
 	// Start transaction
 	tx, err := database.DB.Begin()
 	if err != nil {
+		centers, _ := h.getAllCenters()
 		data := h.getCommonData(c)
 		data["PageTitle"] = "Figaró - Crear Usuario"
 		data["Action"] = "crear"
+		data["Centers"] = centers
 		data["ErrorMessage"] = "Error en la base de datos"
 		h.renderTemplate(c, "admin_usuario_form.html", data)
 		return
 	}
 
-	// Insert user
-	userQuery := `INSERT INTO users (username, password_hash, display_name, email, updated_at) 
-				  VALUES (?, ?, ?, ?, datetime('now'))`
+	// Prepare default_center_id for database (NULL if empty)
+	var defaultCenterIDPtr *int
+	if defaultCenterID != "" && defaultCenterID != "0" {
+		if id, err := strconv.Atoi(defaultCenterID); err == nil {
+			defaultCenterIDPtr = &id
+		}
+	}
 
-	result, err := tx.Exec(userQuery, username, hashedPassword, displayName, email)
+	// Insert user
+	userQuery := `INSERT INTO users (username, password_hash, display_name, email, default_center_id, force_default_center, updated_at) 
+				  VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
+
+	result, err := tx.Exec(userQuery, username, hashedPassword, displayName, email, defaultCenterIDPtr, forceDefaultCenter)
 	if err != nil {
 		tx.Rollback()
+		centers, _ := h.getAllCenters()
 		data := h.getCommonData(c)
 		data["PageTitle"] = "Figaró - Crear Usuario"
 		data["Action"] = "crear"
+		data["Centers"] = centers
 		data["ErrorMessage"] = "Error al crear el usuario: " + err.Error()
 		h.renderTemplate(c, "admin_usuario_form.html", data)
 		return
@@ -213,12 +240,26 @@ func (h *Handlers) AdminUsuarioEditar(c *gin.Context) {
 	// Get user permissions
 	permissions, _ := h.getUserPermissions(userID)
 
+	// Get all centers for the select dropdown
+	centers, err := h.getAllCenters()
+	if err != nil {
+		centers = []models.Center{}
+	}
+
+	// Convert default center ID from pointer to simple int for template
+	defaultCenterID := 0
+	if editUser.DefaultCenterID != nil {
+		defaultCenterID = *editUser.DefaultCenterID
+	}
+
 	// Show edit form
 	data := h.getCommonData(c)
 	data["PageTitle"] = "Figaró - Editar Usuario"
 	data["Action"] = "editar"
 	data["EditUser"] = editUser
 	data["UserPermissions"] = permissions
+	data["Centers"] = centers
+	data["DefaultCenterID"] = defaultCenterID
 
 	h.renderTemplate(c, "admin_usuario_form.html", data)
 }
@@ -230,15 +271,19 @@ func (h *Handlers) handleUserUpdate(c *gin.Context, userID string) {
 	displayName := c.PostForm("display_name")
 	email := c.PostForm("email")
 	permissions := c.PostFormArray("permissions")
+	defaultCenterID := c.PostForm("default_center_id")
+	forceDefaultCenter := c.PostForm("force_default_center") == "on"
 
 	if username == "" || displayName == "" || email == "" {
 		editUser, _ := h.getUserByID(userID)
 		userPermissions, _ := h.getUserPermissions(userID)
+		centers, _ := h.getAllCenters()
 		data := h.getCommonData(c)
 		data["PageTitle"] = "Figaró - Editar Usuario"
 		data["Action"] = "editar"
 		data["EditUser"] = editUser
 		data["UserPermissions"] = userPermissions
+		data["Centers"] = centers
 		data["ErrorMessage"] = "Username, nombre y email son requeridos"
 		h.renderTemplate(c, "admin_usuario_form.html", data)
 		return
@@ -249,14 +294,24 @@ func (h *Handlers) handleUserUpdate(c *gin.Context, userID string) {
 	if err != nil {
 		editUser, _ := h.getUserByID(userID)
 		userPermissions, _ := h.getUserPermissions(userID)
+		centers, _ := h.getAllCenters()
 		data := h.getCommonData(c)
 		data["PageTitle"] = "Figaró - Editar Usuario"
 		data["Action"] = "editar"
 		data["EditUser"] = editUser
 		data["UserPermissions"] = userPermissions
+		data["Centers"] = centers
 		data["ErrorMessage"] = "Error en la base de datos"
 		h.renderTemplate(c, "admin_usuario_form.html", data)
 		return
+	}
+
+	// Prepare default_center_id for database (NULL if empty)
+	var defaultCenterIDPtr *int
+	if defaultCenterID != "" && defaultCenterID != "0" {
+		if id, err := strconv.Atoi(defaultCenterID); err == nil {
+			defaultCenterIDPtr = &id
+		}
 	}
 
 	// Update user
@@ -270,20 +325,22 @@ func (h *Handlers) handleUserUpdate(c *gin.Context, userID string) {
 			tx.Rollback()
 			editUser, _ := h.getUserByID(userID)
 			userPermissions, _ := h.getUserPermissions(userID)
+			centers, _ := h.getAllCenters()
 			data := h.getCommonData(c)
 			data["PageTitle"] = "Figaró - Editar Usuario"
 			data["Action"] = "editar"
 			data["EditUser"] = editUser
 			data["UserPermissions"] = userPermissions
+			data["Centers"] = centers
 			data["ErrorMessage"] = "Error al procesar la contraseña"
 			h.renderTemplate(c, "admin_usuario_form.html", data)
 			return
 		}
-		userQuery = `UPDATE users SET username = ?, password_hash = ?, display_name = ?, email = ?, updated_at = datetime('now') WHERE id = ?`
-		args = []interface{}{username, hashedPassword, displayName, email, userID}
+		userQuery = `UPDATE users SET username = ?, password_hash = ?, display_name = ?, email = ?, default_center_id = ?, force_default_center = ?, updated_at = datetime('now') WHERE id = ?`
+		args = []interface{}{username, hashedPassword, displayName, email, defaultCenterIDPtr, forceDefaultCenter, userID}
 	} else {
-		userQuery = `UPDATE users SET username = ?, display_name = ?, email = ?, updated_at = datetime('now') WHERE id = ?`
-		args = []interface{}{username, displayName, email, userID}
+		userQuery = `UPDATE users SET username = ?, display_name = ?, email = ?, default_center_id = ?, force_default_center = ?, updated_at = datetime('now') WHERE id = ?`
+		args = []interface{}{username, displayName, email, defaultCenterIDPtr, forceDefaultCenter, userID}
 	}
 
 	_, err = tx.Exec(userQuery, args...)
@@ -291,11 +348,13 @@ func (h *Handlers) handleUserUpdate(c *gin.Context, userID string) {
 		tx.Rollback()
 		editUser, _ := h.getUserByID(userID)
 		userPermissions, _ := h.getUserPermissions(userID)
+		centers, _ := h.getAllCenters()
 		data := h.getCommonData(c)
 		data["PageTitle"] = "Figaró - Editar Usuario"
 		data["Action"] = "editar"
 		data["EditUser"] = editUser
 		data["UserPermissions"] = userPermissions
+		data["Centers"] = centers
 		data["ErrorMessage"] = "Error al actualizar el usuario: " + err.Error()
 		h.renderTemplate(c, "admin_usuario_form.html", data)
 		return
@@ -307,11 +366,13 @@ func (h *Handlers) handleUserUpdate(c *gin.Context, userID string) {
 		tx.Rollback()
 		editUser, _ := h.getUserByID(userID)
 		userPermissions, _ := h.getUserPermissions(userID)
+		centers, _ := h.getAllCenters()
 		data := h.getCommonData(c)
 		data["PageTitle"] = "Figaró - Editar Usuario"
 		data["Action"] = "editar"
 		data["EditUser"] = editUser
 		data["UserPermissions"] = userPermissions
+		data["Centers"] = centers
 		data["ErrorMessage"] = "Error al actualizar permisos"
 		h.renderTemplate(c, "admin_usuario_form.html", data)
 		return
@@ -325,11 +386,13 @@ func (h *Handlers) handleUserUpdate(c *gin.Context, userID string) {
 			tx.Rollback()
 			editUser, _ := h.getUserByID(userID)
 			userPermissions, _ := h.getUserPermissions(userID)
+			centers, _ := h.getAllCenters()
 			data := h.getCommonData(c)
 			data["PageTitle"] = "Figaró - Editar Usuario"
 			data["Action"] = "editar"
 			data["EditUser"] = editUser
 			data["UserPermissions"] = userPermissions
+			data["Centers"] = centers
 			data["ErrorMessage"] = "Error al asignar permisos: " + err.Error()
 			h.renderTemplate(c, "admin_usuario_form.html", data)
 			return
@@ -887,7 +950,7 @@ func (h *Handlers) getAllUsersPaginated(page, perPage int) ([]models.User, int, 
 	pagination := models.NewPaginationInfo(page, perPage, totalCount)
 
 	// Get paginated results
-	query := `SELECT id, username, display_name, email, created_at, updated_at FROM users ORDER BY username LIMIT ? OFFSET ?`
+	query := `SELECT id, username, display_name, email, default_center_id, force_default_center, created_at, updated_at FROM users ORDER BY username LIMIT ? OFFSET ?`
 
 	rows, err := database.DB.Query(query, perPage, pagination.Offset)
 	if err != nil {
@@ -898,7 +961,7 @@ func (h *Handlers) getAllUsersPaginated(page, perPage int) ([]models.User, int, 
 	var users []models.User
 	for rows.Next() {
 		var user models.User
-		err := rows.Scan(&user.ID, &user.Username, &user.DisplayName, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+		err := rows.Scan(&user.ID, &user.Username, &user.DisplayName, &user.Email, &user.DefaultCenterID, &user.ForceDefaultCenter, &user.CreatedAt, &user.UpdatedAt)
 		if err != nil {
 			continue
 		}
@@ -915,9 +978,9 @@ func (h *Handlers) getAllUsersPaginated(page, perPage int) ([]models.User, int, 
 
 func (h *Handlers) getUserByID(userID string) (models.User, error) {
 	var user models.User
-	query := `SELECT id, username, display_name, email, created_at, updated_at FROM users WHERE id = ?`
+	query := `SELECT id, username, display_name, email, default_center_id, force_default_center, created_at, updated_at FROM users WHERE id = ?`
 
-	err := database.DB.QueryRow(query, userID).Scan(&user.ID, &user.Username, &user.DisplayName, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+	err := database.DB.QueryRow(query, userID).Scan(&user.ID, &user.Username, &user.DisplayName, &user.Email, &user.DefaultCenterID, &user.ForceDefaultCenter, &user.CreatedAt, &user.UpdatedAt)
 	return user, err
 }
 

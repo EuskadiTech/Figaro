@@ -9,14 +9,16 @@ import (
 
 // User represents a user in the system
 type User struct {
-	ID          int       `json:"id" db:"id"`
-	Username    string    `json:"username" db:"username"`
-	PasswordHash string   `json:"-" db:"password_hash"` // Hidden in JSON
-	DisplayName string    `json:"display_name" db:"display_name"`
-	Email       string    `json:"email" db:"email"`
-	CreatedAt   time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
-	Permissions []string  `json:"permissions,omitempty"` // Loaded separately
+	ID                 int       `json:"id" db:"id"`
+	Username           string    `json:"username" db:"username"`
+	PasswordHash       string    `json:"-" db:"password_hash"` // Hidden in JSON
+	DisplayName        string    `json:"display_name" db:"display_name"`
+	Email              string    `json:"email" db:"email"`
+	DefaultCenterID    *int      `json:"default_center_id" db:"default_center_id"` // NULL allowed
+	ForceDefaultCenter bool      `json:"force_default_center" db:"force_default_center"`
+	CreatedAt          time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt          time.Time `json:"updated_at" db:"updated_at"`
+	Permissions        []string  `json:"permissions,omitempty"` // Loaded separately
 }
 
 // Center represents an educational center

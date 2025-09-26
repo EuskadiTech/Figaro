@@ -81,6 +81,46 @@
                             </div>
                         </div>
 
+                        <!-- Default Center Settings -->
+                        <div class="card border-warning mb-4">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0"><i class="bi bi-building me-2"></i>Configuración de Centro por Defecto</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8 mb-3">
+                                        <label for="default_center_id" class="form-label">Centro por Defecto</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                            <select class="form-select" id="default_center_id" name="default_center_id">
+                                                <option value="">Seleccionar centro...</option>
+                                                {{range .Centers}}
+                                                <option value="{{.ID}}" {{if eq $.DefaultCenterID .ID}}selected{{end}}>
+                                                    {{.Name}}
+                                                </option>
+                                                {{end}}
+                                            </select>
+                                        </div>
+                                        <small class="text-muted">Centro que se asignará automáticamente al usuario</small>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Configuración</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" 
+                                                   type="checkbox" 
+                                                   id="force_default_center" 
+                                                   name="force_default_center"
+                                                   {{if .EditUser}}{{if .EditUser.ForceDefaultCenter}}checked{{end}}{{else if .FormData}}{{if .FormData.force_default_center}}checked{{end}}{{end}}>
+                                            <label class="form-check-label" for="force_default_center">
+                                                <strong>Forzar centro por defecto?</strong>
+                                                <small class="d-block text-muted">Si está habilitado, el usuario solo puede trabajar con el centro por defecto seleccionado</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="mb-4">
                             <label class="form-label">Permisos del Usuario</label>
                             
@@ -360,7 +400,7 @@ function updateModuleHighlighting() {
     const materialsCard = document.querySelector('.card.border-success');
     const materialsChecked = Array.from(materialsPerms).filter(p => p.checked).length;
     
-    if (materialesChecked > 0) {
+    if (materialsChecked > 0) {
         materialsCard.classList.add('bg-light');
         materialsCard.querySelector('.card-header').classList.remove('bg-success');
         materialsCard.querySelector('.card-header').classList.add('bg-success');
@@ -418,6 +458,32 @@ document.querySelectorAll('.module-perm').forEach(checkbox => {
         
         updateModuleHighlighting();
     });
+});
+
+// Default center interaction logic
+document.addEventListener('DOMContentLoaded', function() {
+    const defaultCenterSelect = document.getElementById('default_center_id');
+    const forceDefaultCenterCheckbox = document.getElementById('force_default_center');
+    
+    // Function to update the force checkbox state
+    function updateForceCheckboxState() {
+        if (defaultCenterSelect.value === '' || defaultCenterSelect.value === '0') {
+            // No center selected, disable and uncheck the force checkbox
+            forceDefaultCenterCheckbox.checked = false;
+            forceDefaultCenterCheckbox.disabled = true;
+            forceDefaultCenterCheckbox.closest('.form-check').classList.add('text-muted');
+        } else {
+            // Center selected, enable the force checkbox
+            forceDefaultCenterCheckbox.disabled = false;
+            forceDefaultCenterCheckbox.closest('.form-check').classList.remove('text-muted');
+        }
+    }
+    
+    // Listen for changes in the center select
+    defaultCenterSelect.addEventListener('change', updateForceCheckboxState);
+    
+    // Initialize on page load
+    updateForceCheckboxState();
 });
 </script>
 {{end}}
