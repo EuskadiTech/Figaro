@@ -636,6 +636,26 @@ func (h *Handlers) AdminConfiguracion(c *gin.Context) {
 	h.renderTemplate(c, "admin_configuracion.html", data)
 }
 
+// AdminFiles handles file management page
+func (h *Handlers) AdminFiles(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	data := h.getCommonData(c)
+	data["PageTitle"] = "Figaró - Gestión de Archivos"
+
+	h.renderTemplate(c, "admin_files.html", data)
+}
+
 // AdminCentroAulas handles classroom management for a specific center
 func (h *Handlers) AdminCentroAulas(c *gin.Context) {
 	user := auth.GetCurrentUser(c)
@@ -919,7 +939,7 @@ func (h *Handlers) getAllCenters() ([]models.Center, error) {
 func (h *Handlers) getAllMaterialsWithCenter() ([]models.MaterialWithCenter, error) {
 	query := `
 		SELECT m.id, m.center_id, c.name as center_name, m.name, m.photo_path, m.unit, 
-			   m.available_quantity, m.minimum_quantity, m.notes, m.created_at, m.updated_at
+			   m.available_quantity, m.minimum_quantity, m.notes, m.category, m.created_at, m.updated_at
 		FROM materials m
 		JOIN centers c ON m.center_id = c.id
 		ORDER BY c.name, m.name
@@ -936,7 +956,7 @@ func (h *Handlers) getAllMaterialsWithCenter() ([]models.MaterialWithCenter, err
 		var material models.MaterialWithCenter
 		err := rows.Scan(&material.ID, &material.CenterID, &material.CenterName, &material.Name,
 			&material.PhotoPath, &material.Unit, &material.AvailableQuantity, &material.MinimumQuantity,
-			&material.Notes, &material.CreatedAt, &material.UpdatedAt)
+			&material.Notes, &material.Category, &material.CreatedAt, &material.UpdatedAt)
 		if err != nil {
 			continue
 		}
@@ -970,7 +990,7 @@ func (h *Handlers) calculateMaterialStats(materials []models.MaterialWithCenter)
 func (h *Handlers) getAllActivitiesWithCenter() ([]models.ActivityWithCenter, error) {
 	query := `
 		SELECT a.id, a.center_id, COALESCE(c.name, 'Global') as center_name, a.title, a.description,
-			   a.start_datetime, a.end_datetime, a.is_global, a.meeting_url, a.web_url,
+			   a.start_datetime, a.end_datetime, a.is_global, a.status, a.meeting_url, a.web_url,
 			   a.created_at, a.updated_at
 		FROM activities a
 		LEFT JOIN centers c ON a.center_id = c.id
@@ -989,7 +1009,7 @@ func (h *Handlers) getAllActivitiesWithCenter() ([]models.ActivityWithCenter, er
 		var activity models.ActivityWithCenter
 		err := rows.Scan(&activity.ID, &activity.CenterID, &activity.CenterName, &activity.Title,
 			&activity.Description, &activity.StartDatetime, &activity.EndDatetime, &activity.IsGlobal,
-			&activity.MeetingURL, &activity.WebURL, &activity.CreatedAt, &activity.UpdatedAt)
+			&activity.Status, &activity.MeetingURL, &activity.WebURL, &activity.CreatedAt, &activity.UpdatedAt)
 		if err != nil {
 			continue
 		}

@@ -57,6 +57,7 @@ type Material struct {
 	AvailableQuantity int       `json:"cantidad_disponible" db:"available_quantity"` // Keep Spanish JSON field for compatibility
 	MinimumQuantity   int       `json:"cantidad_minima" db:"minimum_quantity"` // Keep Spanish JSON field for compatibility
 	Notes             string    `json:"notas" db:"notes"` // Keep Spanish JSON field for compatibility
+	Category          string    `json:"categoria" db:"category"` // Keep Spanish JSON field for compatibility
 	CreatedAt         time.Time `json:"createdAt" db:"created_at"` // Keep existing field name
 	UpdatedAt         time.Time `json:"updated_at" db:"updated_at"`
 }
@@ -70,6 +71,7 @@ type Activity struct {
 	StartDatetime  time.Time             `json:"start" db:"start_datetime"`
 	EndDatetime    time.Time             `json:"end" db:"end_datetime"`
 	IsGlobal       bool                  `json:"_global" db:"is_global"` // Keep underscore prefix for compatibility
+	Status         string                `json:"status" db:"status"`
 	MeetingURL     *string               `json:"meeting_url" db:"meeting_url"`
 	WebURL         *string               `json:"web_url" db:"web_url"`
 	CreatedAt      time.Time             `json:"created_at" db:"created_at"`
@@ -166,6 +168,7 @@ type MaterialWithCenter struct {
 	AvailableQuantity int       `json:"available_quantity"`
 	MinimumQuantity   int       `json:"minimum_quantity"`
 	Notes             string    `json:"notes"`
+	Category          string    `json:"category"`
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
 }
@@ -188,6 +191,7 @@ type ActivityWithCenter struct {
 	StartDatetime time.Time `json:"start_datetime"`
 	EndDatetime   time.Time `json:"end_datetime"`
 	IsGlobal      bool      `json:"is_global"`
+	Status        string    `json:"status"`
 	MeetingURL    *string   `json:"meeting_url"`
 	WebURL        *string   `json:"web_url"`
 	CreatedAt     time.Time `json:"created_at"`

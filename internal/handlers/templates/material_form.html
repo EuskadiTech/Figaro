@@ -21,6 +21,20 @@
             </div>
 
             <div class="form-group">
+                <label for="categoria">Categoría *</label>
+                <select id="categoria" 
+                        name="categoria" 
+                        class="form-select" 
+                        required>
+                    <option value="">Selecciona una categoría</option>
+                    <option value="electronico" {{if .Material}}{{if eq .Material.Category "electronico"}}selected{{end}}{{else if .FormData}}{{if eq .FormData.categoria "electronico"}}selected{{end}}{{end}}>Electrónico</option>
+                    <option value="mobiliario" {{if .Material}}{{if eq .Material.Category "mobiliario"}}selected{{end}}{{else if .FormData}}{{if eq .FormData.categoria "mobiliario"}}selected{{end}}{{end}}>Mobiliario</option>
+                    <option value="papeleria" {{if .Material}}{{if eq .Material.Category "papeleria"}}selected{{end}}{{else if .FormData}}{{if eq .FormData.categoria "papeleria"}}selected{{end}}{{end}}>Papelería</option>
+                    <option value="otros" {{if .Material}}{{if eq .Material.Category "otros"}}selected{{end}}{{else if .FormData}}{{if eq .FormData.categoria "otros"}}selected{{end}}{{end}}>Otros</option>
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label for="unidad">Unidad *</label>
                 <input type="text" 
                        id="unidad" 

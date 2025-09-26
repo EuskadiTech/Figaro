@@ -19,6 +19,7 @@
                     <tr>
                         <th>Foto</th>
                         <th>Nombre</th>
+                        <th>Categoría</th>
                         <th>Cantidad Disponible</th>
                         <th>Cantidad Mínima</th>
                         <th>Unidad</th>
@@ -41,6 +42,13 @@
                         <td>
                             <strong>{{.Name}}</strong>
                             {{if .Notes}}<br><small class="text-muted">{{.Notes}}</small>{{end}}
+                        </td>
+                        <td>
+                            {{if eq .Category "electronico"}}<span class="badge bg-info">Electrónico</span>
+                            {{else if eq .Category "mobiliario"}}<span class="badge bg-warning">Mobiliario</span>
+                            {{else if eq .Category "papeleria"}}<span class="badge bg-success">Papelería</span>
+                            {{else if eq .Category "otros"}}<span class="badge bg-secondary">Otros</span>
+                            {{else}}<span class="badge bg-light text-dark">{{.Category}}</span>{{end}}
                         </td>
                         <td class="text-center fw-bold">{{.AvailableQuantity}}</td>
                         <td class="text-center fw-bold">{{.MinimumQuantity}}</td>
