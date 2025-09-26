@@ -2,10 +2,35 @@
 <div class="container-fluid py-4">
     <h1 class="mb-4">Actividades - {{.Centro}}</h1>
     
+    <!-- Tabs Navigation -->
+    <div class="mb-4">
+        <ul class="nav nav-tabs" id="activitiesTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {{if eq .ActiveTab "all"}}active{{end}}" href="/actividades?tab=all{{if .SearchQuery}}&q={{.SearchQuery}}{{end}}{{if .ShowPast}}&past=y{{end}}" role="tab">
+                    <i class="fas fa-list me-1"></i>
+                    Todas las Actividades
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {{if eq .ActiveTab "compartidas"}}active{{end}}" href="/actividades?tab=compartidas{{if .SearchQuery}}&q={{.SearchQuery}}{{end}}{{if .ShowPast}}&past=y{{end}}" role="tab">
+                    <i class="fas fa-share-alt me-1"></i>
+                    Compartidas
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {{if eq .ActiveTab "enlaces"}}active{{end}}" href="/actividades?tab=enlaces{{if .SearchQuery}}&q={{.SearchQuery}}{{end}}{{if .ShowPast}}&past=y{{end}}" role="tab">
+                    <i class="fas fa-link me-1"></i>
+                    Con Enlaces Personalizados
+                </a>
+            </li>
+        </ul>
+    </div>
+    
     <!-- Search Form -->
     <div class="card mb-4">
         <div class="card-body">
             <form method="GET" action="/actividades">
+                <input type="hidden" name="tab" value="{{.ActiveTab}}" />
                 <div class="row g-3 align-items-end">
                     <div class="col-md-6">
                         <label for="search" class="form-label">Buscar actividades</label>
@@ -16,7 +41,7 @@
                             <i class="fas fa-search me-1"></i>
                             Buscar
                         </button>
-                        <a href="/actividades" class="btn btn-outline-secondary">
+                        <a href="/actividades?tab={{.ActiveTab}}" class="btn btn-outline-secondary">
                             <i class="fas fa-times me-1"></i>
                             Limpiar
                         </a>
@@ -56,18 +81,33 @@
         <div class="row g-4">
             {{range .Activities}}
             <div class="col-lg-6">
-                <div class="card h-100 {{if .IsGlobal}}border-primary{{end}}">
+                <div class="card h-100 {{if .IsGlobal}}border-primary{{end}} {{if .SharedFromCenter}}border-info{{end}}">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">{{.Title}}</h5>
-                        {{if .IsGlobal}}
-                        <span class="badge bg-primary">
-                            <i class="fas fa-globe me-1"></i>
-                            Global
-                        </span>
-                        {{end}}
+                        <div class="d-flex gap-2">
+                            {{if .IsGlobal}}
+                            <span class="badge bg-primary">
+                                <i class="fas fa-globe me-1"></i>
+                                Global
+                            </span>
+                            {{end}}
+                            {{if .SharedFromCenter}}
+                            <span class="badge bg-info">
+                                <i class="fas fa-share-alt me-1"></i>
+                                Compartido
+                            </span>
+                            {{end}}
+                        </div>
                     </div>
                     
                     <div class="card-body">
+                        {{if .SharedFromCenter}}
+                        <div class="alert alert-info alert-sm mb-3">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <small>Compartido por: <strong>{{.SharedFromCenter}}</strong></small>
+                        </div>
+                        {{end}}
+
                         <div class="row mb-3">
                             <div class="col-sm-6">
                                 <div class="d-flex align-items-center mb-2">
@@ -107,6 +147,12 @@
                             <a href="{{.WebURL}}" target="_blank" class="btn btn-sm btn-outline-info">
                                 <i class="fas fa-external-link-alt me-1"></i>
                                 Web
+                            </a>
+                            {{end}}
+                            {{range .CustomLinks}}
+                            <a href="{{.URL}}" target="_blank" class="btn btn-sm btn-outline-warning">
+                                <i class="fas fa-link me-1"></i>
+                                {{.Label}}
                             </a>
                             {{end}}
                             {{if call $.HasAccess "actividades.update"}}

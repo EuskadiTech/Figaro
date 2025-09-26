@@ -63,17 +63,39 @@ type Material struct {
 
 // Activity represents an activity or event
 type Activity struct {
-	ID             int       `json:"id" db:"id"`
-	CenterID       *int      `json:"center_id" db:"center_id"` // NULL for global activities
-	Title          string    `json:"title" db:"title"`
-	Description    string    `json:"description" db:"description"`
-	StartDatetime  time.Time `json:"start" db:"start_datetime"`
-	EndDatetime    time.Time `json:"end" db:"end_datetime"`
-	IsGlobal       bool      `json:"_global" db:"is_global"` // Keep underscore prefix for compatibility
-	MeetingURL     *string   `json:"meeting_url" db:"meeting_url"`
-	WebURL         *string   `json:"web_url" db:"web_url"`
-	CreatedAt      time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at" db:"updated_at"`
+	ID             int                   `json:"id" db:"id"`
+	CenterID       *int                  `json:"center_id" db:"center_id"` // NULL for global activities
+	Title          string                `json:"title" db:"title"`
+	Description    string                `json:"description" db:"description"`
+	StartDatetime  time.Time             `json:"start" db:"start_datetime"`
+	EndDatetime    time.Time             `json:"end" db:"end_datetime"`
+	IsGlobal       bool                  `json:"_global" db:"is_global"` // Keep underscore prefix for compatibility
+	MeetingURL     *string               `json:"meeting_url" db:"meeting_url"`
+	WebURL         *string               `json:"web_url" db:"web_url"`
+	CreatedAt      time.Time             `json:"created_at" db:"created_at"`
+	UpdatedAt      time.Time             `json:"updated_at" db:"updated_at"`
+	// Additional fields for sharing and links (loaded separately)
+	Shares         []ActivityShare       `json:"shares,omitempty"`
+	CustomLinks    []ActivityCustomLink  `json:"custom_links,omitempty"`
+	SharedFromCenter *string             `json:"shared_from_center,omitempty"` // For display purposes
+}
+
+// ActivityShare represents an activity shared with a specific center
+type ActivityShare struct {
+	ID               int    `json:"id" db:"id"`
+	ActivityID       int    `json:"activity_id" db:"activity_id"`
+	CenterID         int    `json:"center_id" db:"center_id"`
+	SharedByCenterID int    `json:"shared_by_center_id" db:"shared_by_center_id"`
+	CreatedAt        time.Time `json:"created_at" db:"created_at"`
+}
+
+// ActivityCustomLink represents a custom link associated with an activity
+type ActivityCustomLink struct {
+	ID         int    `json:"id" db:"id"`
+	ActivityID int    `json:"activity_id" db:"activity_id"`
+	Label      string `json:"label" db:"label"`
+	URL        string `json:"url" db:"url"`
+	CreatedAt  time.Time `json:"created_at" db:"created_at"`
 }
 
 // UserPermission represents a user's permission
