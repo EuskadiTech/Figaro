@@ -110,7 +110,7 @@
                             
                             <!-- QR Scanner Container -->
                             <div id="qr-scanner-container" style="display: none;">
-                                <video id="qr-video" width="100%" height="300" style="border: 1px solid #ccc; border-radius: 5px;"></video>
+                                <div id="qr-reader" style="width: 100%; height: 300px; border: 1px solid #ccc; border-radius: 5px;"></div>
                                 <div id="qr-scanner-status" class="mt-2 text-center">
                                     <small class="text-muted">Apunta la cámara hacia el código QR</small>
                                 </div>
@@ -126,20 +126,16 @@
         </div>
     </main>
     <script src="/static/bootstrap.bundle.min.js"></script>
+    <script src="/static/html5-qrcode.min.js"></script>
     <script>
-        // QR Scanner functionality
-        let qrStream = null;
-        let qrVideo = null;
-        let qrCanvas = null;
-        let qrContext = null;
-        let qrScanInterval = null;
+        // QR Scanner functionality using html5-qrcode library
+        let qrCodeScanner = null;
 
         document.addEventListener('DOMContentLoaded', function() {
             const qrManualRadio = document.getElementById('qr-manual');
             const qrCameraRadio = document.getElementById('qr-camera');
             const qrManualInput = document.getElementById('qr-manual-input');
             const qrScannerContainer = document.getElementById('qr-scanner-container');
-            const qrVideoElement = document.getElementById('qr-video');
             const qrStatus = document.getElementById('qr-scanner-status');
             const qrDataInput = document.getElementById('qr_data');
 
@@ -159,40 +155,50 @@
             qrManualRadio.addEventListener('change', toggleQRMode);
             qrCameraRadio.addEventListener('change', toggleQRMode);
 
-            // Start QR scanner using camera
-            async function startQRScanner() {
+            // Start QR scanner using html5-qrcode library
+            function startQRScanner() {
                 try {
-                    qrStatus.innerHTML = '<small class="text-muted">Iniciando cámara...</small>';
+                    qrStatus.innerHTML = '<small class="text-muted">Iniciando escáner de QR...</small>';
                     
-                    // Request camera access
-                    qrStream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { 
-                            facingMode: 'environment', // Use back camera if available
-                            width: { ideal: 640 },
-                            height: { ideal: 480 }
-                        } 
+                    // Initialize Html5QrcodeScanner
+                    qrCodeScanner = new Html5QrcodeScanner("qr-reader", {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 },
+                        aspectRatio: 1.0,
+                        showTorchButtonIfSupported: true,
+                        showZoomSliderIfSupported: true
                     });
-                    
-                    qrVideo = qrVideoElement;
-                    qrVideo.srcObject = qrStream;
-                    qrVideo.play();
 
-                    // Create canvas for QR processing
-                    qrCanvas = document.createElement('canvas');
-                    qrContext = qrCanvas.getContext('2d');
+                    // Define success callback
+                    function onScanSuccess(decodedText, decodedResult) {
+                        console.log(`QR Code detected: ${decodedText}`, decodedResult);
+                        qrDataInput.value = decodedText;
+                        qrStatus.innerHTML = '<small class="text-success">¡Código QR detectado exitosamente!</small>';
+                        
+                        // Stop scanning after successful detection
+                        stopQRScanner();
+                        
+                        // Switch back to manual mode to show the detected value
+                        qrManualRadio.checked = true;
+                        toggleQRMode();
+                        
+                        // Optionally auto-submit the form
+                        // document.getElementById('qr-login-form').submit();
+                    }
 
+                    // Define error callback
+                    function onScanError(errorMessage) {
+                        // Handle scan error - usually just means no QR code detected yet
+                        // We don't need to show these frequent errors to the user
+                    }
+
+                    // Start scanning
+                    qrCodeScanner.render(onScanSuccess, onScanError);
                     qrStatus.innerHTML = '<small class="text-muted">Apunta la cámara hacia el código QR</small>';
                     
-                    // Start scanning for QR codes
-                    qrVideo.addEventListener('loadedmetadata', function() {
-                        qrCanvas.width = qrVideo.videoWidth;
-                        qrCanvas.height = qrVideo.videoHeight;
-                        startQRDetection();
-                    });
-
                 } catch (err) {
-                    console.error('Error accessing camera:', err);
-                    qrStatus.innerHTML = '<small class="text-danger">Error: No se pudo acceder a la cámara. ' + err.message + '</small>';
+                    console.error('Error starting QR scanner:', err);
+                    qrStatus.innerHTML = '<small class="text-danger">Error: No se pudo inicializar el escáner. ' + err.message + '</small>';
                     // Fall back to manual input
                     qrManualRadio.checked = true;
                     toggleQRMode();
@@ -201,65 +207,14 @@
 
             // Stop QR scanner
             function stopQRScanner() {
-                if (qrScanInterval) {
-                    clearInterval(qrScanInterval);
-                    qrScanInterval = null;
-                }
-                
-                if (qrStream) {
-                    qrStream.getTracks().forEach(track => track.stop());
-                    qrStream = null;
-                }
-                
-                if (qrVideo) {
-                    qrVideo.srcObject = null;
-                }
-            }
-
-            // Simple QR detection (looking for QR-like patterns)
-            function startQRDetection() {
-                qrScanInterval = setInterval(() => {
-                    if (qrVideo && qrVideo.readyState === qrVideo.HAVE_ENOUGH_DATA) {
-                        qrContext.drawImage(qrVideo, 0, 0, qrCanvas.width, qrCanvas.height);
-                        
-                        // Get image data for processing
-                        const imageData = qrContext.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
-                        const qrData = detectQRPattern(imageData);
-                        
-                        if (qrData) {
-                            qrDataInput.value = qrData;
-                            qrStatus.innerHTML = '<small class="text-success">¡Código QR detectado!</small>';
-                            stopQRScanner();
-                            // Optionally auto-submit the form
-                            // document.getElementById('qr-login-form').submit();
-                        }
+                if (qrCodeScanner) {
+                    try {
+                        qrCodeScanner.clear();
+                        qrCodeScanner = null;
+                    } catch (error) {
+                        console.error('Error stopping QR scanner:', error);
                     }
-                }, 300); // Scan every 300ms for better performance
-            }
-
-            // Enhanced QR pattern detection
-            // This implementation looks for QR code-like patterns in the image
-            function detectQRPattern(imageData) {
-                // For a production environment, you would use a library like jsQR
-                // This is a simplified placeholder that demonstrates the concept
-                
-                // In a real implementation, you would:
-                // 1. Convert image to grayscale
-                // 2. Apply threshold to create binary image
-                // 3. Look for QR code finder patterns (3 squares in corners)
-                // 4. Extract and decode the data matrix
-                
-                // For demo purposes, we'll return null to keep manual input primary
-                // but this is where you'd integrate a QR decoding library
-                
-                return null; // Placeholder - no actual QR detection yet
-            }
-
-            // Demo function to simulate QR detection (for testing purposes)
-            function simulateQRDetection() {
-                // This could be used for testing by generating a sample QR data
-                // return "demo:ZGVtbw==:abc123hash";
-                return null;
+                }
             }
 
             // Clean up on page unload

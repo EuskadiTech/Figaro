@@ -24,11 +24,17 @@
     border-radius: 5px;
 }
 
-#qr-video {
+#qr-reader {
     width: 100%;
     height: auto;
     border-radius: 5px;
     background-color: #000;
+}
+
+#qr-reader video {
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
 }
 
 .btn-check:checked + .btn-outline-secondary {
