@@ -1,0 +1,376 @@
+{{define "content"}}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Configuración del Sistema</h1>
+        <a href="/admin" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>
+            Volver al Panel
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="list-group" id="config-tabs">
+                <a class="list-group-item list-group-item-action active" data-bs-toggle="list" href="#general">
+                    <i class="fas fa-cog me-2"></i>
+                    General
+                </a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#database">
+                    <i class="fas fa-database me-2"></i>
+                    Base de Datos
+                </a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#security">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Seguridad
+                </a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#email">
+                    <i class="fas fa-envelope me-2"></i>
+                    Email
+                </a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#backup">
+                    <i class="fas fa-save me-2"></i>
+                    Respaldos
+                </a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#logs">
+                    <i class="fas fa-file-alt me-2"></i>
+                    Registros
+                </a>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="tab-content">
+                <!-- General Configuration -->
+                <div class="tab-pane fade show active" id="general">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-cog me-2"></i>
+                                Configuración General
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="/admin/configuracion/general">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="app_name" class="form-label">Nombre de la Aplicación</label>
+                                        <input type="text" class="form-control" id="app_name" name="app_name" value="Figaró">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="app_version" class="form-label">Versión</label>
+                                        <input type="text" class="form-control" id="app_version" name="app_version" value="2.0.0" readonly>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="default_timezone" class="form-label">Zona Horaria Predeterminada</label>
+                                        <select class="form-select" id="default_timezone" name="default_timezone">
+                                            <option value="Europe/Madrid" selected>Europe/Madrid</option>
+                                            <option value="UTC">UTC</option>
+                                            <option value="America/New_York">America/New_York</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="default_language" class="form-label">Idioma Predeterminado</label>
+                                        <select class="form-select" id="default_language" name="default_language">
+                                            <option value="es" selected>Español</option>
+                                            <option value="en">English</option>
+                                            <option value="fr">Français</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="maintenance_mode" class="form-label">Modo Mantenimiento</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="maintenance_mode" name="maintenance_mode">
+                                        <label class="form-check-label" for="maintenance_mode">
+                                            Activar modo mantenimiento
+                                        </label>
+                                    </div>
+                                    <div class="form-text">En modo mantenimiento, solo los administradores pueden acceder al sistema.</div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>
+                                    Guardar Configuración
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Database Configuration -->
+                <div class="tab-pane fade" id="database">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-database me-2"></i>
+                                Configuración de Base de Datos
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Información actual de la base de datos SQLite.
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Estado de la Base de Datos</h6>
+                                            <ul class="list-unstyled mb-0">
+                                                <li><strong>Tipo:</strong> SQLite</li>
+                                                <li><strong>Tamaño:</strong> 2.4 MB</li>
+                                                <li><strong>Conexiones activas:</strong> 3</li>
+                                                <li><strong>Último respaldo:</strong> 15/12/2024 10:30</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-outline-primary" type="button">
+                                            <i class="fas fa-sync me-1"></i>
+                                            Verificar Integridad
+                                        </button>
+                                        <button class="btn btn-outline-warning" type="button">
+                                            <i class="fas fa-tools me-1"></i>
+                                            Optimizar Base de Datos
+                                        </button>
+                                        <button class="btn btn-outline-info" type="button">
+                                            <i class="fas fa-download me-1"></i>
+                                            Crear Respaldo Manual
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Configuration -->
+                <div class="tab-pane fade" id="security">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                Configuración de Seguridad
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="/admin/configuracion/security">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="session_timeout" class="form-label">Tiempo de Sesión (minutos)</label>
+                                        <input type="number" class="form-control" id="session_timeout" name="session_timeout" value="30" min="5" max="480">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="max_login_attempts" class="form-label">Máximo Intentos de Login</label>
+                                        <input type="number" class="form-control" id="max_login_attempts" name="max_login_attempts" value="5" min="3" max="10">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password_policy" class="form-label">Política de Contraseñas</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="require_uppercase" name="require_uppercase" checked>
+                                        <label class="form-check-label" for="require_uppercase">
+                                            Requerir al menos una mayúscula
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="require_numbers" name="require_numbers" checked>
+                                        <label class="form-check-label" for="require_numbers">
+                                            Requerir al menos un número
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="require_special" name="require_special">
+                                        <label class="form-check-label" for="require_special">
+                                            Requerir caracteres especiales
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="min_password_length" class="form-label">Longitud mínima contraseña</label>
+                                    <input type="number" class="form-control" id="min_password_length" name="min_password_length" value="8" min="6" max="20" style="max-width: 100px;">
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>
+                                    Guardar Configuración de Seguridad
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email Configuration -->
+                <div class="tab-pane fade" id="email">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-envelope me-2"></i>
+                                Configuración de Email
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                La funcionalidad de email está en desarrollo y no está disponible actualmente.
+                            </div>
+                            <form>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="smtp_host" class="form-label">Servidor SMTP</label>
+                                        <input type="text" class="form-control" id="smtp_host" name="smtp_host" placeholder="smtp.gmail.com" disabled>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="smtp_port" class="form-label">Puerto SMTP</label>
+                                        <input type="number" class="form-control" id="smtp_port" name="smtp_port" value="587" disabled>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="smtp_username" class="form-label">Usuario SMTP</label>
+                                        <input type="email" class="form-control" id="smtp_username" name="smtp_username" disabled>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="smtp_password" class="form-label">Contraseña SMTP</label>
+                                        <input type="password" class="form-control" id="smtp_password" name="smtp_password" disabled>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary" disabled>
+                                    <i class="fas fa-save me-1"></i>
+                                    Guardar Configuración de Email
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backup Configuration -->
+                <div class="tab-pane fade" id="backup">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-save me-2"></i>
+                                Configuración de Respaldos
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <form method="POST" action="/admin/configuracion/backup">
+                                        <div class="mb-3">
+                                            <label for="auto_backup" class="form-label">Respaldo Automático</label>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="auto_backup" name="auto_backup" checked>
+                                                <label class="form-check-label" for="auto_backup">
+                                                    Activar respaldos automáticos
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="backup_frequency" class="form-label">Frecuencia</label>
+                                            <select class="form-select" id="backup_frequency" name="backup_frequency">
+                                                <option value="daily" selected>Diario</option>
+                                                <option value="weekly">Semanal</option>
+                                                <option value="monthly">Mensual</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="backup_retention" class="form-label">Retención (días)</label>
+                                            <input type="number" class="form-control" id="backup_retention" name="backup_retention" value="30" min="7" max="365">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-1"></i>
+                                            Guardar Configuración
+                                        </button>
+                                    </form>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Respaldos Recientes</h6>
+                                    <div class="list-group">
+                                        <div class="list-group-item">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">backup_20241215_103045.db</h6>
+                                                <small>15/12/2024 10:30</small>
+                                            </div>
+                                            <p class="mb-1">Respaldo automático - 2.4 MB</p>
+                                            <small>
+                                                <a href="#" class="text-primary">Descargar</a> |
+                                                <a href="#" class="text-success">Restaurar</a>
+                                            </small>
+                                        </div>
+                                        <div class="list-group-item">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">backup_20241214_103045.db</h6>
+                                                <small>14/12/2024 10:30</small>
+                                            </div>
+                                            <p class="mb-1">Respaldo automático - 2.3 MB</p>
+                                            <small>
+                                                <a href="#" class="text-primary">Descargar</a> |
+                                                <a href="#" class="text-success">Restaurar</a>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logs Configuration -->
+                <div class="tab-pane fade" id="logs">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-file-alt me-2"></i>
+                                Registros del Sistema
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <select class="form-select" id="log_level">
+                                        <option value="all">Todos los niveles</option>
+                                        <option value="error">Solo errores</option>
+                                        <option value="warning">Advertencias</option>
+                                        <option value="info">Información</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="date" class="form-control" id="log_date" value="2024-12-15">
+                                </div>
+                                <div class="col-md-4">
+                                    <button class="btn btn-outline-primary">
+                                        <i class="fas fa-sync me-1"></i>
+                                        Actualizar
+                                    </button>
+                                    <button class="btn btn-outline-secondary">
+                                        <i class="fas fa-download me-1"></i>
+                                        Descargar
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-body p-0">
+                                    <div style="height: 400px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px; background-color: #f8f9fa; padding: 15px;">
+                                        <div class="text-success">[2024-12-15 10:30:45] INFO: Sistema iniciado correctamente</div>
+                                        <div class="text-info">[2024-12-15 10:30:46] INFO: Base de datos conectada</div>
+                                        <div class="text-info">[2024-12-15 10:31:02] INFO: Usuario 'admin' inició sesión desde 192.168.1.100</div>
+                                        <div class="text-warning">[2024-12-15 10:35:15] WARN: Intento de acceso fallido para usuario 'test'</div>
+                                        <div class="text-info">[2024-12-15 10:40:22] INFO: Nuevo centro creado: 'Centro Educativo A'</div>
+                                        <div class="text-info">[2024-12-15 10:45:08] INFO: Nuevo usuario creado: 'profesor1'</div>
+                                        <div class="text-success">[2024-12-15 11:00:00] INFO: Respaldo automático completado</div>
+                                        <div class="text-danger">[2024-12-15 11:15:33] ERROR: Error temporal de conexión a la base de datos</div>
+                                        <div class="text-success">[2024-12-15 11:15:34] INFO: Conexión a la base de datos restaurada</div>
+                                        <div class="text-info">[2024-12-15 11:30:15] INFO: Usuario 'profesor1' inició sesión desde 192.168.1.105</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

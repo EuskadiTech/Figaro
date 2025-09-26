@@ -4,6 +4,7 @@ package handlers
 import (
 	"database/sql"
 	"embed"
+	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -68,6 +69,9 @@ func (h *Handlers) loadTemplate(templateName string) (*template.Template, error)
 				return strings.Contains(s, item)
 			}
 			return false
+		},
+		"now": func() time.Time {
+			return time.Now()
 		},
 	})
 
@@ -344,15 +348,27 @@ func (h *Handlers) getCenters() ([]string, error) {
 
 // getAulas retrieves classrooms for a center
 func (h *Handlers) getAulas(centro string) ([]string, error) {
-	// This would typically come from database, but for now simulate
-	switch centro {
-	case "Centro Demo":
-		return []string{"Aula 1", "Aula 2", "Aula 3"}, nil
-	case "Centro Demo 2":
-		return []string{"Laboratorio", "Sala de Informática"}, nil
-	default:
-		return []string{}, nil
+	// Get center ID by name first
+	var centerID int
+	query := `SELECT id FROM centers WHERE name = ?`
+	err := database.DB.QueryRow(query, centro).Scan(&centerID)
+	if err != nil {
+		return []string{}, err
 	}
+
+	// Get classrooms from database using the same function as admin
+	classrooms, err := h.getClassroomsByCenter(fmt.Sprintf("%d", centerID))
+	if err != nil {
+		return []string{}, err
+	}
+
+	// Convert classroom models to string array for template compatibility
+	var aulaNames []string
+	for _, classroom := range classrooms {
+		aulaNames = append(aulaNames, classroom.Name)
+	}
+
+	return aulaNames, nil
 }
 
 // MaterialesIndex handles the materials inventory page
@@ -1548,6 +1564,301 @@ func (h *Handlers) AdminCentros(c *gin.Context) {
 	h.renderTemplate(c, "admin_centros.html", data)
 }
 
+// AdminMaterialesReport handles materials report page
+func (h *Handlers) AdminMaterialesReport(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	// Get all centers for filter dropdown
+	centers, err := h.getAllCenters()
+	if err != nil {
+		centers = []models.Center{}
+	}
+
+	// Get all materials with center information
+	materials, err := h.getAllMaterialsWithCenter()
+	if err != nil {
+		materials = []models.MaterialWithCenter{}
+	}
+
+	// Calculate statistics
+	stats := h.calculateMaterialStats(materials)
+
+	data := h.getCommonData(c)
+	data["PageTitle"] = "Figaró - Informe de Materiales por Centro"
+	data["Centers"] = centers
+	data["Materials"] = materials
+	data["Stats"] = stats
+
+	h.renderTemplate(c, "admin_materiales_report.html", data)
+}
+
+// AdminActividadesReport handles activities report page
+func (h *Handlers) AdminActividadesReport(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	// Get all centers for filter dropdown
+	centers, err := h.getAllCenters()
+	if err != nil {
+		centers = []models.Center{}
+	}
+
+	// Get recent activities with center information
+	activities, err := h.getAllActivitiesWithCenter()
+	if err != nil {
+		activities = []models.ActivityWithCenter{}
+	}
+
+	// Calculate statistics
+	stats := h.calculateActivityStats()
+
+	data := h.getCommonData(c)
+	data["PageTitle"] = "Figaró - Informe de Actividades"
+	data["Centers"] = centers
+	data["Activities"] = activities
+	data["Stats"] = stats
+
+	h.renderTemplate(c, "admin_actividades_report.html", data)
+}
+
+// AdminConfiguracion handles system configuration page
+func (h *Handlers) AdminConfiguracion(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	data := h.getCommonData(c)
+	data["PageTitle"] = "Figaró - Configuración del Sistema"
+
+	h.renderTemplate(c, "admin_configuracion.html", data)
+}
+
+// AdminCentroAulas handles classroom management for a specific center
+func (h *Handlers) AdminCentroAulas(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	centerID := c.Param("center_id")
+	
+	// Get center information
+	center, err := h.getCenterByID(centerID)
+	if err != nil {
+		c.String(http.StatusNotFound, "Centro no encontrado")
+		return
+	}
+
+	// Get classrooms for this center
+	classrooms, err := h.getClassroomsByCenter(centerID)
+	if err != nil {
+		classrooms = []models.Classroom{} // Empty slice if error
+	}
+
+	data := h.getCommonData(c)
+	data["PageTitle"] = "Figaró - Aulas de " + center.Name
+	data["Center"] = center
+	data["Classrooms"] = classrooms
+
+	h.renderTemplate(c, "admin_aulas.html", data)
+}
+
+// AdminAulaCrear handles classroom creation
+func (h *Handlers) AdminAulaCrear(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	centerID := c.Param("center_id")
+	
+	// Get center information
+	center, err := h.getCenterByID(centerID)
+	if err != nil {
+		c.String(http.StatusNotFound, "Centro no encontrado")
+		return
+	}
+
+	if c.Request.Method == "POST" {
+		// Handle form submission
+		name := c.PostForm("nombre")
+		if name == "" {
+			data := h.getCommonData(c)
+			data["PageTitle"] = "Figaró - Crear Aula"
+			data["Center"] = center
+			data["ErrorMessage"] = "El nombre del aula es obligatorio"
+			data["FormData"] = map[string]string{"nombre": name}
+			h.renderTemplate(c, "admin_aula_form.html", data)
+			return
+		}
+
+		// Create classroom
+		err := h.createClassroom(centerID, name)
+		if err != nil {
+			data := h.getCommonData(c)
+			data["PageTitle"] = "Figaró - Crear Aula"
+			data["Center"] = center
+			data["ErrorMessage"] = "Error al crear el aula: " + err.Error()
+			data["FormData"] = map[string]string{"nombre": name}
+			h.renderTemplate(c, "admin_aula_form.html", data)
+			return
+		}
+
+		c.Redirect(http.StatusFound, "/admin/centros/aulas/"+centerID)
+		return
+	}
+
+	// Show form
+	data := h.getCommonData(c)
+	data["PageTitle"] = "Figaró - Crear Aula"
+	data["Center"] = center
+	data["Action"] = "crear"
+
+	h.renderTemplate(c, "admin_aula_form.html", data)
+}
+
+// AdminAulaEditar handles classroom editing
+func (h *Handlers) AdminAulaEditar(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	centerID := c.Param("center_id")
+	aulaID := c.Param("aula_id")
+	
+	// Get center information
+	center, err := h.getCenterByID(centerID)
+	if err != nil {
+		c.String(http.StatusNotFound, "Centro no encontrado")
+		return
+	}
+
+	// Get classroom information
+	classroom, err := h.getClassroomByID(aulaID)
+	if err != nil {
+		c.String(http.StatusNotFound, "Aula no encontrada")
+		return
+	}
+
+	if c.Request.Method == "POST" {
+		// Handle form submission
+		name := c.PostForm("nombre")
+		if name == "" {
+			data := h.getCommonData(c)
+			data["PageTitle"] = "Figaró - Editar Aula"
+			data["Center"] = center
+			data["Classroom"] = classroom
+			data["ErrorMessage"] = "El nombre del aula es obligatorio"
+			data["FormData"] = map[string]string{"nombre": name}
+			data["Action"] = "editar"
+			h.renderTemplate(c, "admin_aula_form.html", data)
+			return
+		}
+
+		// Update classroom
+		err := h.updateClassroom(aulaID, name)
+		if err != nil {
+			data := h.getCommonData(c)
+			data["PageTitle"] = "Figaró - Editar Aula"
+			data["Center"] = center
+			data["Classroom"] = classroom
+			data["ErrorMessage"] = "Error al actualizar el aula: " + err.Error()
+			data["FormData"] = map[string]string{"nombre": name}
+			data["Action"] = "editar"
+			h.renderTemplate(c, "admin_aula_form.html", data)
+			return
+		}
+
+		c.Redirect(http.StatusFound, "/admin/centros/aulas/"+centerID)
+		return
+	}
+
+	// Show form
+	data := h.getCommonData(c)
+	data["PageTitle"] = "Figaró - Editar Aula"
+	data["Center"] = center
+	data["Classroom"] = classroom
+	data["Action"] = "editar"
+
+	h.renderTemplate(c, "admin_aula_form.html", data)
+}
+
+// AdminAulaEliminar handles classroom deletion
+func (h *Handlers) AdminAulaEliminar(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Check admin permissions
+	if !auth.UserHasAccess(c, "ADMIN") {
+		c.String(http.StatusForbidden, "Acceso denegado")
+		return
+	}
+
+	centerID := c.Param("center_id")
+	aulaID := c.Param("aula_id")
+
+	// Delete classroom
+	err := h.deleteClassroom(aulaID)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error al eliminar el aula: "+err.Error())
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/admin/centros/aulas/"+centerID)
+}
+
 // Helper functions for admin module
 func (h *Handlers) getAllUsers() ([]models.User, error) {
 	query := `SELECT id, username, display_name, email, created_at, updated_at FROM users ORDER BY username`
@@ -1626,6 +1937,176 @@ func (h *Handlers) getAllCenters() ([]models.Center, error) {
 	}
 
 	return centers, nil
+}
+
+// getAllMaterialsWithCenter gets all materials with their center names
+func (h *Handlers) getAllMaterialsWithCenter() ([]models.MaterialWithCenter, error) {
+	query := `
+		SELECT m.id, m.center_id, c.name as center_name, m.name, m.photo_path, m.unit, 
+			   m.available_quantity, m.minimum_quantity, m.notes, m.created_at, m.updated_at
+		FROM materials m
+		JOIN centers c ON m.center_id = c.id
+		ORDER BY c.name, m.name
+	`
+
+	rows, err := database.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var materials []models.MaterialWithCenter
+	for rows.Next() {
+		var material models.MaterialWithCenter
+		err := rows.Scan(&material.ID, &material.CenterID, &material.CenterName, &material.Name,
+			&material.PhotoPath, &material.Unit, &material.AvailableQuantity, &material.MinimumQuantity,
+			&material.Notes, &material.CreatedAt, &material.UpdatedAt)
+		if err != nil {
+			continue
+		}
+		materials = append(materials, material)
+	}
+
+	return materials, nil
+}
+
+// calculateMaterialStats calculates statistics from materials data
+func (h *Handlers) calculateMaterialStats(materials []models.MaterialWithCenter) models.MaterialStats {
+	stats := models.MaterialStats{}
+	stats.TotalMaterials = len(materials)
+	
+	centersMap := make(map[int]bool)
+	for _, material := range materials {
+		centersMap[material.CenterID] = true
+		
+		if material.AvailableQuantity >= material.MinimumQuantity {
+			stats.HealthyMaterials++
+		} else {
+			stats.LowStockMaterials++
+		}
+	}
+	stats.TotalCenters = len(centersMap)
+	
+	return stats
+}
+
+// getAllActivitiesWithCenter gets all activities with their center names
+func (h *Handlers) getAllActivitiesWithCenter() ([]models.ActivityWithCenter, error) {
+	query := `
+		SELECT a.id, a.center_id, COALESCE(c.name, 'Global') as center_name, a.title, a.description,
+			   a.start_datetime, a.end_datetime, a.is_global, a.meeting_url, a.web_url,
+			   a.created_at, a.updated_at
+		FROM activities a
+		LEFT JOIN centers c ON a.center_id = c.id
+		ORDER BY a.start_datetime DESC
+		LIMIT 10
+	`
+
+	rows, err := database.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var activities []models.ActivityWithCenter
+	for rows.Next() {
+		var activity models.ActivityWithCenter
+		err := rows.Scan(&activity.ID, &activity.CenterID, &activity.CenterName, &activity.Title,
+			&activity.Description, &activity.StartDatetime, &activity.EndDatetime, &activity.IsGlobal,
+			&activity.MeetingURL, &activity.WebURL, &activity.CreatedAt, &activity.UpdatedAt)
+		if err != nil {
+			continue
+		}
+		activities = append(activities, activity)
+	}
+
+	return activities, nil
+}
+
+// calculateActivityStats calculates statistics from activities data
+func (h *Handlers) calculateActivityStats() models.ActivityStats {
+	stats := models.ActivityStats{}
+	
+	// Count total activities
+	database.DB.QueryRow("SELECT COUNT(*) FROM activities").Scan(&stats.TotalActivities)
+	
+	// Count activities by status based on current time
+	now := time.Now()
+	
+	// Pending (future start date)
+	database.DB.QueryRow("SELECT COUNT(*) FROM activities WHERE start_datetime > ?", now).Scan(&stats.PendingActivities)
+	
+	// In Progress (current time between start and end)
+	database.DB.QueryRow("SELECT COUNT(*) FROM activities WHERE start_datetime <= ? AND end_datetime >= ?", now, now).Scan(&stats.InProgressActivities)
+	
+	// Completed (past end date)
+	database.DB.QueryRow("SELECT COUNT(*) FROM activities WHERE end_datetime < ?", now).Scan(&stats.CompletedActivities)
+	
+	return stats
+}
+
+// getCenterByID gets a center by ID
+func (h *Handlers) getCenterByID(centerID string) (models.Center, error) {
+	var center models.Center
+	query := `SELECT id, name, timezone, created_at, updated_at FROM centers WHERE id = ?`
+	
+	err := database.DB.QueryRow(query, centerID).Scan(
+		&center.ID, &center.Name, &center.Timezone, &center.CreatedAt, &center.UpdatedAt)
+	return center, err
+}
+
+// getClassroomsByCenter gets all classrooms for a center
+func (h *Handlers) getClassroomsByCenter(centerID string) ([]models.Classroom, error) {
+	query := `SELECT id, center_id, name, created_at, updated_at FROM classrooms WHERE center_id = ? ORDER BY name`
+	
+	rows, err := database.DB.Query(query, centerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var classrooms []models.Classroom
+	for rows.Next() {
+		var classroom models.Classroom
+		err := rows.Scan(&classroom.ID, &classroom.CenterID, &classroom.Name, &classroom.CreatedAt, &classroom.UpdatedAt)
+		if err != nil {
+			continue
+		}
+		classrooms = append(classrooms, classroom)
+	}
+
+	return classrooms, nil
+}
+
+// getClassroomByID gets a classroom by ID
+func (h *Handlers) getClassroomByID(classroomID string) (models.Classroom, error) {
+	var classroom models.Classroom
+	query := `SELECT id, center_id, name, created_at, updated_at FROM classrooms WHERE id = ?`
+	
+	err := database.DB.QueryRow(query, classroomID).Scan(
+		&classroom.ID, &classroom.CenterID, &classroom.Name, &classroom.CreatedAt, &classroom.UpdatedAt)
+	return classroom, err
+}
+
+// createClassroom creates a new classroom
+func (h *Handlers) createClassroom(centerID, name string) error {
+	query := `INSERT INTO classrooms (center_id, name, created_at, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+	_, err := database.DB.Exec(query, centerID, name)
+	return err
+}
+
+// updateClassroom updates a classroom
+func (h *Handlers) updateClassroom(classroomID, name string) error {
+	query := `UPDATE classrooms SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+	_, err := database.DB.Exec(query, name, classroomID)
+	return err
+}
+
+// deleteClassroom deletes a classroom
+func (h *Handlers) deleteClassroom(classroomID string) error {
+	query := `DELETE FROM classrooms WHERE id = ?`
+	_, err := database.DB.Exec(query, classroomID)
+	return err
 }
 
 // Static serves static files from embedded filesystem

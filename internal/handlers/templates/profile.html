@@ -46,8 +46,8 @@
         <div class="session-controls">
             <form method="POST" action="/perfil" style="display: inline;">
                 <input type="hidden" name="action" value="logout_all_sessions">
-                <button type="submit" class="button rojo" onclick="return confirm('¿Estás seguro de que quieres cerrar todas las demás sesiones?')">
-                    <img loading="lazy" class="picto" src="/static/pictos/salir.png">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que quieres cerrar todas las demás sesiones?')">
+                    <i class="fas fa-sign-out-alt me-1"></i>
                     Cerrar Sesión en Todos los Dispositivos
                 </button>
             </form>

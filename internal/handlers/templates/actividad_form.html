@@ -96,13 +96,13 @@
                        placeholder="https://ejemplo.com">
             </div>
 
-            <div class="form-actions">
-                <button type="submit" class="button azul">
-                    <img loading="lazy" class="picto-small" src="/static/pictos/escribir.png">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>
                     {{if eq .Action "crear"}}Crear Actividad{{else}}Guardar Cambios{{end}}
                 </button>
-                <a href="/actividades" class="button">
-                    <img loading="lazy" class="picto-small" src="/static/pictos/cancelar.png">
+                <a href="/actividades" class="btn btn-secondary">
+                    <i class="fas fa-times me-1"></i>
                     Cancelar
                 </a>
             </div>
