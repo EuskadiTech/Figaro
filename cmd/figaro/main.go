@@ -85,6 +85,12 @@ func main() {
 		authGroup.POST("/actividades/editar/:id", h.ActividadesEditar)
 		authGroup.POST("/actividades/eliminar/:id", h.ActividadesEliminar)
 
+		// Shared folders module
+		authGroup.GET("/carpetas-compartidas", h.CarpetasCompartidasIndex)
+		authGroup.GET("/carpetas-compartidas/crear", h.CarpetasCompartidasCrear)
+		authGroup.POST("/carpetas-compartidas/crear", h.CarpetasCompartidasCrear)
+		authGroup.POST("/carpetas-compartidas/eliminar/:id", h.CarpetasCompartidasEliminar)
+
 		// Admin module
 		authGroup.GET("/admin", h.AdminIndex)
 		authGroup.GET("/admin/usuarios", h.AdminUsuarios)

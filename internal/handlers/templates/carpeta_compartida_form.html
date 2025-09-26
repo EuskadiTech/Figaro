@@ -1,0 +1,175 @@
+{{define "content"}}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            {{if eq .Action "crear"}}
+            Nueva Carpeta Compartida
+            {{else}}
+            Editar Carpeta Compartida
+            {{end}}
+        </h1>
+        <a href="/carpetas-compartidas" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>
+            Volver a Carpetas
+        </a>
+    </div>
+
+    {{if .ErrorMessage}}
+    <div class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        {{.ErrorMessage}}
+    </div>
+    {{end}}
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-folder me-2"></i>
+                        Información de la Carpeta
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nombre" class="form-label">Nombre de la Carpeta *</label>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" 
+                                           value="{{if .FormData}}{{.FormData.nombre}}{{end}}" required>
+                                    <div class="form-text">Nombre descriptivo para identificar la carpeta</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="tipo" class="form-label">Tipo de Carpeta *</label>
+                                    <select class="form-select" id="tipo" name="tipo" required onchange="toggleTypeFields()">
+                                        <option value="">-- Seleccionar tipo --</option>
+                                        <option value="cloud" {{if .FormData}}{{if eq .FormData.tipo "cloud"}}selected{{end}}{{end}}>
+                                            🌩️ Carpeta en la Nube (Google Drive, OneDrive, etc.)
+                                        </option>
+                                        <option value="local" {{if .FormData}}{{if eq .FormData.tipo "local"}}selected{{end}}{{end}}>
+                                            📁 Carpeta Local (almacenada en el servidor)
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="3">{{if .FormData}}{{.FormData.descripcion}}{{end}}</textarea>
+                            <div class="form-text">Descripción opcional para explicar el contenido de la carpeta</div>
+                        </div>
+
+                        <!-- Cloud URL field (shown only for cloud type) -->
+                        <div class="mb-3" id="cloudUrlField" style="display: none;">
+                            <label for="cloud_url" class="form-label">URL de la Carpeta en la Nube *</label>
+                            <input type="url" class="form-control" id="cloud_url" name="cloud_url" 
+                                   value="{{if .FormData}}{{.FormData.cloud_url}}{{end}}"
+                                   placeholder="https://drive.google.com/drive/folders/...">
+                            <div class="form-text">
+                                Pega aquí el enlace compartido de tu carpeta de Google Drive, OneDrive, Dropbox, etc.
+                            </div>
+                        </div>
+
+                        <!-- Local folder info (shown only for local type) -->
+                        <div class="alert alert-info" id="localFolderInfo" style="display: none;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Carpeta Local:</strong> Se creará una carpeta en el servidor donde los usuarios podrán subir archivos.
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="center_id" class="form-label">Centro</label>
+                                    <select class="form-select" id="center_id" name="center_id">
+                                        <option value="">-- Todos los centros (Global) --</option>
+                                        {{range .Centers}}
+                                        <option value="{{.ID}}" 
+                                                {{if $.FormData}}{{if eq (toString $.FormData.center_id) (toString .ID)}}selected{{end}}{{end}}>
+                                            {{.Name}}
+                                        </option>
+                                        {{end}}
+                                    </select>
+                                    <div class="form-text">Selecciona un centro específico o déjalo vacío para todos los centros</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="form-check mt-4">
+                                        <input class="form-check-input" type="checkbox" id="is_global" name="is_global" value="1"
+                                               {{if .FormData}}{{if .FormData.is_global}}checked{{end}}{{end}}
+                                               onchange="toggleCenterField()">
+                                        <label class="form-check-label" for="is_global">
+                                            <strong>Carpeta Global</strong>
+                                        </label>
+                                        <div class="form-text">Disponible para todos los centros</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="/carpetas-compartidas" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                {{if eq .Action "crear"}}
+                                Crear Carpeta
+                                {{else}}
+                                Guardar Cambios
+                                {{end}}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleTypeFields() {
+    const tipo = document.getElementById('tipo').value;
+    const cloudUrlField = document.getElementById('cloudUrlField');
+    const localFolderInfo = document.getElementById('localFolderInfo');
+    const cloudUrlInput = document.getElementById('cloud_url');
+
+    if (tipo === 'cloud') {
+        cloudUrlField.style.display = 'block';
+        localFolderInfo.style.display = 'none';
+        cloudUrlInput.required = true;
+    } else if (tipo === 'local') {
+        cloudUrlField.style.display = 'none';
+        localFolderInfo.style.display = 'block';
+        cloudUrlInput.required = false;
+    } else {
+        cloudUrlField.style.display = 'none';
+        localFolderInfo.style.display = 'none';
+        cloudUrlInput.required = false;
+    }
+}
+
+function toggleCenterField() {
+    const isGlobal = document.getElementById('is_global').checked;
+    const centerSelect = document.getElementById('center_id');
+    
+    if (isGlobal) {
+        centerSelect.value = '';
+        centerSelect.disabled = true;
+    } else {
+        centerSelect.disabled = false;
+    }
+}
+
+// Initialize form based on existing values
+document.addEventListener('DOMContentLoaded', function() {
+    toggleTypeFields();
+    toggleCenterField();
+});
+</script>
+{{end}}

@@ -268,3 +268,32 @@ type SystemSetting struct {
 	CreatedAt   time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
 }
+
+// SharedFolder represents a shared folder with cloud drive links or local files
+type SharedFolder struct {
+	ID          int       `json:"id" db:"id"`
+	CenterID    *int      `json:"center_id" db:"center_id"` // NULL for global folders
+	Name        string    `json:"name" db:"name"`
+	Description string    `json:"description" db:"description"`
+	Type        string    `json:"type" db:"type"` // "local" or "cloud"
+	CloudURL    *string   `json:"cloud_url" db:"cloud_url"` // URL for cloud drive folders
+	LocalPath   *string   `json:"local_path" db:"local_path"` // Relative path for local folders
+	IsActive    bool      `json:"is_active" db:"is_active"`
+	CreatedAt   time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
+}
+
+// SharedFolderWithCenter represents a shared folder with its center name
+type SharedFolderWithCenter struct {
+	ID          int       `json:"id"`
+	CenterID    *int      `json:"center_id"`
+	CenterName  string    `json:"center_name"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Type        string    `json:"type"`
+	CloudURL    *string   `json:"cloud_url"`
+	LocalPath   *string   `json:"local_path"`
+	IsActive    bool      `json:"is_active"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}

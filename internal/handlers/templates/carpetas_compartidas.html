@@ -1,0 +1,156 @@
+{{define "content"}}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Carpetas Compartidas</h1>
+        <div>
+            {{if .HasPermission "ADMIN"}}
+            <a href="/carpetas-compartidas/crear" class="btn btn-primary me-2">
+                <i class="fas fa-plus me-1"></i>
+                Nueva Carpeta
+            </a>
+            {{end}}
+            <a href="/" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>
+                Volver al Inicio
+            </a>
+        </div>
+    </div>
+
+    {{if .ErrorMessage}}
+    <div class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        {{.ErrorMessage}}
+    </div>
+    {{end}}
+
+    {{if .SuccessMessage}}
+    <div class="alert alert-success" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        {{.SuccessMessage}}
+    </div>
+    {{end}}
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-folder-open me-2"></i>
+                        Carpetas Disponibles
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {{if .Folders}}
+                    <div class="row">
+                        {{range .Folders}}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title mb-0">
+                                            {{if eq .Type "cloud"}}
+                                                <i class="fas fa-cloud text-primary me-2"></i>
+                                            {{else}}
+                                                <i class="fas fa-folder text-warning me-2"></i>
+                                            {{end}}
+                                            {{.Name}}
+                                        </h6>
+                                        <span class="badge bg-{{if .CenterID}}info{{else}}success{{end}}">
+                                            {{.CenterName}}
+                                        </span>
+                                    </div>
+                                    
+                                    {{if .Description}}
+                                    <p class="card-text text-muted small">{{.Description}}</p>
+                                    {{end}}
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            {{if eq .Type "cloud"}}
+                                                <i class="fas fa-link me-1"></i>Enlace Cloud
+                                            {{else}}
+                                                <i class="fas fa-hdd me-1"></i>Local
+                                            {{end}}
+                                        </small>
+                                        <div class="btn-group" role="group">
+                                            {{if eq .Type "cloud"}}
+                                                {{if .CloudURL}}
+                                                <a href="{{.CloudURL}}" class="btn btn-outline-primary btn-sm" target="_blank">
+                                                    <i class="fas fa-external-link-alt"></i>
+                                                </a>
+                                                {{end}}
+                                            {{else}}
+                                                <button class="btn btn-outline-primary btn-sm" onclick="openLocalFolder('{{.ID}}')">
+                                                    <i class="fas fa-folder-open"></i>
+                                                </button>
+                                            {{end}}
+                                            {{if $.HasPermission "ADMIN"}}
+                                            <button class="btn btn-outline-danger btn-sm" onclick="deleteFolder('{{.ID}}', '{{.Name}}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {{end}}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer text-muted">
+                                    <small>Creado: {{.CreatedAt.Format "02/01/2006 15:04"}}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {{end}}
+                    </div>
+                    {{else}}
+                    <div class="text-center py-5">
+                        <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No hay carpetas compartidas disponibles</h5>
+                        <p class="text-muted">Las carpetas compartidas aparecerán aquí una vez creadas.</p>
+                        {{if .HasPermission "ADMIN"}}
+                        <a href="/carpetas-compartidas/crear" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>
+                            Crear Primera Carpeta
+                        </a>
+                        {{end}}
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete confirmation modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar la carpeta compartida <strong id="folderName"></strong>?</p>
+                <p class="text-warning"><small><i class="fas fa-exclamation-triangle me-1"></i>Esta acción no se puede deshacer.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function deleteFolder(id, name) {
+    document.getElementById('folderName').textContent = name;
+    document.getElementById('deleteForm').action = '/carpetas-compartidas/eliminar/' + id;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+function openLocalFolder(id) {
+    // This would open a file browser for local folders
+    // For now, we'll show an info message
+    alert('Funcionalidad de explorar carpeta local próximamente disponible');
+}
+</script>
+{{end}}
