@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/EuskadiTech/Figaro/internal/auth"
@@ -210,6 +211,83 @@ func (h *Handlers) ProfilePost(c *gin.Context) {
 	default:
 		c.Redirect(http.StatusFound, "/perfil")
 	}
+}
+
+// WebDAVTokens handles the WebDAV tokens management page
+func (h *Handlers) WebDAVTokens(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	tokens, err := h.getUserWebDAVTokens(user.ID)
+	if err != nil {
+		tokens = []models.WebDAVToken{}
+	}
+
+	// Get shared folders for the user
+	centro, _ := c.Cookie("centro")
+	sharedFolders, err := h.getSharedFolders(centro)
+	if err != nil {
+		sharedFolders = []models.SharedFolderWithCenter{}
+	}
+
+	data := h.getCommonData(c)
+	data["PageTitle"] = "Figaró - Acceso WebDAV"
+	data["Tokens"] = tokens
+	data["SharedFolders"] = sharedFolders
+	data["BaseURL"] = fmt.Sprintf("http://%s", c.Request.Host) // You might want to make this configurable
+
+	h.renderTemplate(c, "webdav_tokens.html", data)
+}
+
+// WebDAVCreateToken handles creation of new WebDAV tokens
+func (h *Handlers) WebDAVCreateToken(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	deviceName := c.PostForm("device_name")
+	if deviceName == "" {
+		c.Redirect(http.StatusFound, "/perfil/webdav?error=Nombre del dispositivo requerido")
+		return
+	}
+
+	// Create new WebDAV token
+	_, err := h.createWebDAVToken(user.ID, deviceName)
+	if err != nil {
+		c.Redirect(http.StatusFound, "/perfil/webdav?error=Error al crear el token")
+		return
+	}
+
+	c.Redirect(http.StatusFound, fmt.Sprintf("/perfil/webdav?success=Token creado para %s", deviceName))
+}
+
+// WebDAVRevokeToken handles revocation of WebDAV tokens
+func (h *Handlers) WebDAVRevokeToken(c *gin.Context) {
+	user := auth.GetCurrentUser(c)
+	if user == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	tokenIDStr := c.Param("id")
+	tokenID, err := strconv.Atoi(tokenIDStr)
+	if err != nil {
+		c.Redirect(http.StatusFound, "/perfil/webdav?error=ID de token inválido")
+		return
+	}
+
+	err = h.revokeWebDAVToken(tokenID, user.ID)
+	if err != nil {
+		c.Redirect(http.StatusFound, "/perfil/webdav?error=Error al revocar el token")
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/perfil/webdav?success=Token revocado correctamente")
 }
 
 // ElegirCentro handles center selection

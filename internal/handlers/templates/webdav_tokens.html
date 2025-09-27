@@ -1,0 +1,189 @@
+{{define "content"}}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Acceso WebDAV</h1>
+        <a href="/perfil" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>
+            Volver al Perfil
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-mobile-alt me-2"></i>
+                        Dispositivos Conectados
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {{if .Tokens}}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Dispositivo</th>
+                                    <th>Token</th>
+                                    <th>Último Uso</th>
+                                    <th>Expira</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{range .Tokens}}
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-laptop me-2"></i>
+                                        <strong>{{.DeviceName}}</strong>
+                                    </td>
+                                    <td>
+                                        <code class="small">{{slice .Token 0 16}}...</code>
+                                        <button class="btn btn-sm btn-outline-secondary ms-1" onclick="copyToken('{{.Token}}')">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted">{{.LastUsed.Format "02/01/2006 15:04"}}</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted">{{.ExpiresAt.Format "02/01/2006"}}</span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="revokeToken('{{.ID}}', '{{.DeviceName}}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {{end}}
+                            </tbody>
+                        </table>
+                    </div>
+                    {{else}}
+                    <div class="text-center py-4">
+                        <i class="fas fa-mobile-alt fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No hay dispositivos conectados</h5>
+                        <p class="text-muted">Crea un token para conectar tu dispositivo via WebDAV</p>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>
+                        Nuevo Dispositivo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/perfil/webdav/crear">
+                        <div class="mb-3">
+                            <label for="device_name" class="form-label">Nombre del Dispositivo</label>
+                            <input type="text" class="form-control" id="device_name" name="device_name" 
+                                   placeholder="Mi iPhone" required>
+                            <div class="form-text">Elige un nombre descriptivo para identificar tu dispositivo</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-key me-1"></i>
+                            Crear Token WebDAV
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Configuración WebDAV
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Servidor WebDAV:</strong></label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="{{.BaseURL}}/dav/" readonly>
+                            <button class="btn btn-outline-secondary" onclick="copyText('{{.BaseURL}}/dav/')">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Carpetas Disponibles:</strong></label>
+                        <ul class="list-unstyled small">
+                            <li><i class="fas fa-folder me-2 text-primary"></i>MisArchivos/</li>
+                            {{range .SharedFolders}}
+                            {{if eq .Type "local"}}
+                            <li><i class="fas fa-share-alt me-2 text-success"></i>CarpetasCompartidas/{{.Name}}/</li>
+                            {{end}}
+                            {{end}}
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-info small">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Tip:</strong> En tu cliente WebDAV, usa el token como contraseña y déjalo vacío como usuario.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Revoke token modal -->
+<div class="modal fade" id="revokeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Revocar Acceso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas revocar el acceso WebDAV para el dispositivo <strong id="deviceName"></strong>?</p>
+                <p class="text-warning small"><i class="fas fa-exclamation-triangle me-1"></i>El dispositivo perderá acceso inmediatamente.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="revokeForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Revocar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToken(token) {
+    navigator.clipboard.writeText(token).then(() => {
+        // Show a temporary success message
+        const button = event.target.closest('button');
+        const originalIcon = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check text-success"></i>';
+        setTimeout(() => {
+            button.innerHTML = originalIcon;
+        }, 2000);
+    });
+}
+
+function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        const button = event.target.closest('button');
+        const originalIcon = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check text-success"></i>';
+        setTimeout(() => {
+            button.innerHTML = originalIcon;
+        }, 2000);
+    });
+}
+
+function revokeToken(id, deviceName) {
+    document.getElementById('deviceName').textContent = deviceName;
+    document.getElementById('revokeForm').action = '/perfil/webdav/revocar/' + id;
+    new bootstrap.Modal(document.getElementById('revokeModal')).show();
+}
+</script>
+{{end}}
