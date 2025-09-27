@@ -297,3 +297,15 @@ type SharedFolderWithCenter struct {
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
+
+// WebDAVToken represents a WebDAV device session token
+type WebDAVToken struct {
+	ID         int       `json:"id" db:"id"`
+	UserID     int       `json:"user_id" db:"user_id"`
+	DeviceName string    `json:"device_name" db:"device_name"`
+	Token      string    `json:"token" db:"token"`
+	CreatedAt  time.Time `json:"created_at" db:"created_at"`
+	LastUsed   time.Time `json:"last_used" db:"last_used"`
+	ExpiresAt  time.Time `json:"expires_at" db:"expires_at"`
+	IsActive   bool      `json:"is_active" db:"is_active"`
+}

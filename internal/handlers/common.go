@@ -97,6 +97,16 @@ func (h *Handlers) loadTemplate(templateName string) (*template.Template, error)
 			}
 			return result
 		},
+		"slice": func(s string, start, length int) string {
+			if start >= len(s) {
+				return ""
+			}
+			end := start + length
+			if end > len(s) {
+				end = len(s)
+			}
+			return s[start:end]
+		},
 	})
 
 	// First, always load base.html
